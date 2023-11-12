@@ -130,11 +130,39 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
                 facingEast = bin[4:8]
                 facingSouth = bin[8:12]
                 facingWest = bin[4:]
+
                 direction = 0  #0=N|1=E|2=S|3=w
                 for bit in facingNorth:
                     # cell((Y,X),orientation train, direction)
                     if(bit == "1"):
-                        lp = "cell((" + str(i) + "," + str(j) + "),N,"+ str(direction) + "). \n"
+                        lp = "cell((" + str(i) + "," + str(j) + "),0,"+ str(direction) + "). \n"
+                        file.write(lp)
+                    else:
+                        direction += 1
+
+                direction = 0  #0=N|1=E|2=S|3=w
+                for bit in facingEast:
+                    # cell((Y,X),orientation train, direction)
+                    if(bit == "1"):
+                        lp = "cell((" + str(i) + "," + str(j) + "),1,"+ str(direction) + "). \n"
+                        file.write(lp)
+                    else:
+                        direction += 1
+
+                direction = 0  #0=N|1=E|2=S|3=w
+                for bit in facingSouth:
+                    # cell((Y,X),orientation train, direction)
+                    if(bit == "1"):
+                        lp = "cell((" + str(i) + "," + str(j) + "),2,"+ str(direction) + "). \n"
+                        file.write(lp)
+                    else:
+                        direction += 1
+
+                direction = 0  #0=N|1=E|2=S|3=w
+                for bit in facingWest:
+                    # cell((Y,X),orientation train, direction)
+                    if(bit == "1"):
+                        lp = "cell((" + str(i) + "," + str(j) + "),3,"+ str(direction) + "). \n"
                         file.write(lp)
                     else:
                         direction += 1

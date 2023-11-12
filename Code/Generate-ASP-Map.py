@@ -110,9 +110,7 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
     env.reset()
     
     #testing
-    #print(env.rail.grid)
-    #val = "{0:016b}".format(env.rail.grid[0][4])
-    #print(val)
+    print(env.rail.grid)
 
     filename = "map.lp"
     # iterate through grid to define ASP syntax and write to file
@@ -137,8 +135,6 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
                     if(bit == "1"):
                         lp = "cell((" + str(i) + "," + str(j) + "),0,"+ str(direction) + "). \n"
                         file.write(lp)
-                    else:
-                        direction += 1
 
                 direction = 0  #0=N|1=E|2=S|3=w
                 for bit in facingEast:
@@ -146,7 +142,6 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
                     if(bit == "1"):
                         lp = "cell((" + str(i) + "," + str(j) + "),1,"+ str(direction) + "). \n"
                         file.write(lp)
-                    else:
                         direction += 1
 
                 direction = 0  #0=N|1=E|2=S|3=w
@@ -155,7 +150,6 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
                     if(bit == "1"):
                         lp = "cell((" + str(i) + "," + str(j) + "),2,"+ str(direction) + "). \n"
                         file.write(lp)
-                    else:
                         direction += 1
 
                 direction = 0  #0=N|1=E|2=S|3=w
@@ -164,7 +158,6 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
                     if(bit == "1"):
                         lp = "cell((" + str(i) + "," + str(j) + "),3,"+ str(direction) + "). \n"
                         file.write(lp)
-                    else:
                         direction += 1
 
     if do_rendering:

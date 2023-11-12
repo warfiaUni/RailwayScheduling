@@ -81,32 +81,14 @@ def create_env():
                   number_of_agents=2,
                   obs_builder_object=DummyObservationBuilder(),
                   )
-    return env
+    return env, optionals
 
-
-def custom_railmap_example(sleep_for_animation, do_rendering):
-    random.seed(100)
-    np.random.seed(100)
-
-    env = create_env()
-    env.reset()
-
-    if do_rendering:
-        env_renderer = RenderTool(env)
-        env_renderer.render_env(show=True, show_observations=False)
-
-    if sleep_for_animation:
-        time.sleep(5)
-        env_renderer.close_window()
-
-    # uncomment to keep the renderer open
-    #input("Press Enter to continue...")
 
 def exampleMapToASP(sleep_for_animation, do_rendering):
     random.seed(100)
     np.random.seed(100)
 
-    env = create_env()
+    env, optionals = create_env()
     env.reset()
     
     #testing
@@ -115,7 +97,9 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
     filename = "map.lp"
     # iterate through grid to define ASP syntax and write to file
     with open(filename, 'w') as file:
-
+        stations = optionals['agents_hints']['train_stations']
+        for element in stations:
+            file.write("stations" + str(element[0]) + ". \n") #TODO: remove ", 0)" from the stations
         for i, row in enumerate(env.rail.grid):
             for j, element in enumerate(row):
                 #skip empty cells

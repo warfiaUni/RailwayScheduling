@@ -110,9 +110,9 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
     env.reset()
     
     #testing
-    print(env.rail.grid)
-    val = "{0:016b}".format(env.rail.grid[0][4])
-    print(val)
+    #print(env.rail.grid)
+    #val = "{0:016b}".format(env.rail.grid[0][4])
+    #print(val)
 
     filename = "map.lp"
     # iterate through grid to define ASP syntax and write to file
@@ -166,9 +166,6 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
                         file.write(lp)
                     else:
                         direction += 1
-                    
-                    
-                #print(bin)
 
     if do_rendering:
         env_renderer = RenderTool(env)

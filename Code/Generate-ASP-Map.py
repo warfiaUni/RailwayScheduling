@@ -14,6 +14,8 @@ from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import rail_from_grid_transition_map
 from flatland.utils.misc import str2bool
 from flatland.utils.rendertools import RenderTool
+from flatland.envs.rail_generators import sparse_rail_generator
+from flatland.envs.observations import GlobalObsForRailEnv
 
 # --sleep-for-animation=True --do_rendering=True
 
@@ -81,25 +83,37 @@ def create_env():
                   number_of_agents=2,
                   obs_builder_object=DummyObservationBuilder(),
                   )
-    return env, optionals
-
-
-def exampleMapToASP(sleep_for_animation, do_rendering):
-    random.seed(100)
-    np.random.seed(100)
-
-    env, optionals = create_env()
     env.reset()
-    
-    #testing
-    print(env.rail.grid)
+    return env
 
+def create_random_env():
+    rail_generator = sparse_rail_generator(max_num_cities=2)
+
+    # Initialize the properties of the environment
+    random_env = RailEnv(
+        width=24,
+        height=24,
+        number_of_agents=1,
+        rail_generator=rail_generator,
+        line_generator=sparse_line_generator(),
+        obs_builder_object=GlobalObsForRailEnv()
+    )
+    # Call reset() to initialize the environment
+    observation, info = random_env.reset()
+    return random_env
+
+def writeASPFile(env):
     filename = "map.lp"
     # iterate through grid to define ASP syntax and write to file
     with open(filename, 'w') as file:
-        stations = optionals['agents_hints']['train_stations']
-        for element in stations:
-            file.write("stations" + str(element[0]) + ". \n") #TODO: remove ", 0)" from the stations
+        
+        #AGENTS
+        for element in env.agents:
+            # schedule((start),(target),departure,agentID)
+            lp = "schedule(" + str(element.initial_position) + "," + str(element.target) + "," + str(element.earliest_departure) + "," + str(element.handle) + ").\n"
+            file.write(lp)
+        
+        #CELLS
         for i, row in enumerate(env.rail.grid):
             for j, element in enumerate(row):
                 #skip empty cells
@@ -144,6 +158,18 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
                         file.write(lp)
                         direction += 1
 
+def exampleMapToASP(sleep_for_animation, do_rendering):
+    random.seed(100)
+    np.random.seed(100)
+
+    #env = create_env()
+    env = create_random_env()
+
+    #testing
+    #print(env.rail.grid)
+
+    writeASPFile(env)
+
     if do_rendering:
         env_renderer = RenderTool(env)
         env_renderer.render_env(show=True, show_observations=False)
@@ -173,7 +199,7 @@ def main(args):
             assert False, "unhandled option"
 
     # execute example
-    exampleMapToASP(False, False)
+    exampleMapToASP(True, True)
 
 
 if __name__ == '__main__':

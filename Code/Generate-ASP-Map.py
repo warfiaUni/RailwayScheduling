@@ -17,7 +17,7 @@ from flatland.utils.rendertools import RenderTool
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.observations import GlobalObsForRailEnv
 
-# --sleep-for-animation=True --do_rendering=True
+# --sleep-for-animation=True --do_rendering=True --map_type random
 
 def custom_rail_map() -> Tuple[GridTransitionMap, np.array]:
     # We instantiate a very simple rail network on a 7x10 grid:
@@ -106,7 +106,7 @@ def writeASPFile(env):
     filename = "map.lp"
     # iterate through grid to define ASP syntax and write to file
     with open(filename, 'w') as file:
-        
+
         #AGENTS
         for element in env.agents:
             # schedule((start),(target),departure,agentID)
@@ -158,17 +158,20 @@ def writeASPFile(env):
                         file.write(lp)
                         direction += 1
 
-def exampleMapToASP(sleep_for_animation, do_rendering):
+def exampleMapToASP(sleep_for_animation, do_rendering, mapType):
     random.seed(100)
     np.random.seed(100)
-
-    #env = create_env()
-    env = create_random_env()
 
     #testing
     #print(env.rail.grid)
 
+    if mapType == "test":
+        env = create_env()
+    else:
+        env = create_random_env()
+
     writeASPFile(env)
+    
 
     if do_rendering:
         env_renderer = RenderTool(env)
@@ -184,22 +187,25 @@ def exampleMapToASP(sleep_for_animation, do_rendering):
 
 def main(args):
     try:
-        opts, args = getopt.getopt(args, "", ["sleep-for-animation=", "do_rendering=", ""])
+        opts, args = getopt.getopt(args, "", ["sleep-for-animation=", "do_rendering=", "map_type="])
     except getopt.GetoptError as err:
         print(str(err))  # will print something like "option -a not recognized"
         sys.exit(2)
     sleep_for_animation = True
     do_rendering = True
+    map_type = "test"
     for o, a in opts:
         if o in ("--sleep-for-animation"):
             sleep_for_animation = str2bool(a)
         elif o in ("--do_rendering"):
             do_rendering = str2bool(a)
+        elif o in ("--map_type"):   # random or test map
+            map_type = a
         else:
             assert False, "unhandled option"
 
     # execute example
-    exampleMapToASP(True, True)
+    exampleMapToASP(True, True, map_type)
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@ from flatland.utils.misc import str2bool
 from flatland.utils.rendertools import RenderTool
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.observations import GlobalObsForRailEnv
+from flatland.envs.persistence import RailEnvPersister
 
 # --sleep-for-animation=True --do_rendering=True --map_type random
 
@@ -171,7 +172,7 @@ def exampleMapToASP(sleep_for_animation, do_rendering, mapType):
         env = create_random_env()
 
     writeASPFile(env)
-    
+    RailEnvPersister.save(env, "map.pkl") #save to pickle file to share
 
     if do_rendering:
         env_renderer = RenderTool(env)
@@ -180,7 +181,7 @@ def exampleMapToASP(sleep_for_animation, do_rendering, mapType):
     if sleep_for_animation:
         time.sleep(5)
         env_renderer.close_window()
-
+    
     # uncomment to keep the renderer open
     #input("Press Enter to continue...")
     

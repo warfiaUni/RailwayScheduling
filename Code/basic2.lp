@@ -32,7 +32,7 @@
 %
 %
 %
-% shall we A:continue this list XOR  B: shall by calling them 1.1., 1.2., 1.3. includen Transitiontype.Orientation XOR C:shall we add rotation as extra variable (x,y,tt,rotation) 
+% shall we A:continue this list XOR  B: shall by calling them 1.1., 1.2., 1.3. including (Transitiontype.Orientation) XOR C:shall we add rotation as extra variable (x,y,tt,rotation) 
 % erstmal an Mariekes Code halten, damit dann auch die instances mit dem Python Code klappt?
 
 

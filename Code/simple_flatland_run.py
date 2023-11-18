@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 import time
 
@@ -18,22 +17,6 @@ from flatland.utils.rendertools import RenderTool, AgentRenderVariant
 
 from flatland.envs.line_generators import line_from_file
 from flatland.envs.rail_generators import rail_from_file
-
-# This is an introduction example for the Flatland 2.1.* version.
-# Changes and highlights of this version include
-# - Stochastic events (malfunctions)
-# - Different travel speeds for differet agents
-# - Levels are generated using a novel generator to reflect more realistic railway networks
-# - Agents start outside of the environment and enter at their own time
-# - Agents leave the environment after they have reached their goal
-# Use the new sparse_rail_generator to generate feasible network configurations with corresponding tasks
-# Training on simple small tasks is the best way to get familiar with the environment
-# We start by importing the necessary rail and schedule generators
-# The rail generator will generate the railway infrastructure
-# The schedule generator will assign tasks to all the agent within the railway network
-
-# The railway infrastructure can be build using any of the provided generators in env/rail_generators.py
-# Here we use the sparse_rail_generator with the following parameters
 
 DO_RENDERING = True
 

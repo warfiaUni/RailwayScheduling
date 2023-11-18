@@ -64,7 +64,7 @@ def custom_rail_map() -> Tuple[GridTransitionMap, np.array]:
     city_positions = [(0, 3),(6,6)]
     train_stations = [
         [((0, 3), 0)],
-        [((6, 6), 0)],
+        [((6, 6), 0)]
     ]
     city_orientations = [0, 2]
     agents_hints = {'city_positions': city_positions,
@@ -198,7 +198,7 @@ def exampleMapToASP(sleep_for_animation, do_rendering, mapType):
     #testing
     #print(env.rail.grid)
 
-    if mapType == "test":
+    if mapType == "example":
         env = create_env()
     elif mapType == "single":
         env = single_agent_env()
@@ -215,7 +215,7 @@ def exampleMapToASP(sleep_for_animation, do_rendering, mapType):
         env_renderer.render_env(show=True, show_observations=False)
 
     if sleep_for_animation:
-        time.sleep(5)
+        time.sleep(10)
         env_renderer.close_window()
     
     # uncomment to keep the renderer open

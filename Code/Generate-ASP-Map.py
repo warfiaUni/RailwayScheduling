@@ -61,7 +61,7 @@ def custom_rail_map() -> Tuple[GridTransitionMap, np.array]:
     rail = GridTransitionMap(width=rail_map.shape[1],
                              height=rail_map.shape[0], transitions=transitions)
     rail.grid = rail_map
-    city_positions = [(0, 3), (6, 6)]
+    city_positions = [(0, 3),(6,6)]
     train_stations = [
         [((0, 3), 0)],
         [((6, 6), 0)],
@@ -75,13 +75,45 @@ def custom_rail_map() -> Tuple[GridTransitionMap, np.array]:
     print(optionals)
     return rail, rail_map, optionals
 
+def single_agent_env():
+    width = 20  # With of map
+    height = 15  # Height of map
+    nr_trains = 1  # Number of trains that have an assigned task in the env
+    cities_in_map = 2  # Number of cities where agents can start or end
+    seed = 14  # Random seed
+    grid_distribution_of_cities = False  # Type of city distribution, if False cities are randomly placed
+    max_rails_between_cities = 1  # Max number of tracks allowed between cities. This is number of entry point to a city
+    max_rail_in_cities = 1  # Max number of paralle  tracks within a city, representing a realistic trainstation
+
+    # Custom observation builder without predictor
+    observation_builder = GlobalObsForRailEnv()
+
+    # Custom observation builder with predictor, uncomment line below if you want to try this one
+    # observation_builder = TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv())
+
+    # Construct the enviornment with the given observation, generataors, predictors, and stochastic data
+    env = RailEnv(width=width,
+                height=height,
+                rail_generator=sparse_rail_generator(max_num_cities=cities_in_map,
+                                        seed=seed,
+                                        grid_mode=grid_distribution_of_cities,
+                                        max_rails_between_cities=max_rails_between_cities,
+                                        max_rail_pairs_in_city=max_rail_in_cities,
+                                        ),
+                line_generator=sparse_line_generator(),
+                number_of_agents=nr_trains,
+                obs_builder_object=observation_builder,
+                remove_agents_at_target=True)
+    env.reset()
+    return env
+
 def create_env():
     rail, rail_map, optionals = custom_rail_map()
     env = RailEnv(width=rail_map.shape[1],
                   height=rail_map.shape[0],
                   rail_generator=rail_from_grid_transition_map(rail, optionals),
                   line_generator=sparse_line_generator(),
-                  number_of_agents=2,
+                  number_of_agents=1,
                   obs_builder_object=DummyObservationBuilder(),
                   )
     env.reset()
@@ -168,14 +200,18 @@ def exampleMapToASP(sleep_for_animation, do_rendering, mapType):
 
     if mapType == "test":
         env = create_env()
-    else:
+    elif mapType == "single":
+        env = single_agent_env()
+    elif mapType == "random":
         env = create_random_env()
 
     writeASPFile(env)
     RailEnvPersister.save(env, "map.pkl") #save to pickle file to share
 
     if do_rendering:
-        env_renderer = RenderTool(env)
+        env_renderer = RenderTool(env,
+                                  screen_height=1080,
+                                  screen_width=1920)
         env_renderer.render_env(show=True, show_observations=False)
 
     if sleep_for_animation:
@@ -194,19 +230,19 @@ def main(args):
         sys.exit(2)
     sleep_for_animation = True
     do_rendering = True
-    map_type = "test"
+    map_type = "example"
     for o, a in opts:
         if o in ("--sleep-for-animation"):
             sleep_for_animation = str2bool(a)
         elif o in ("--do_rendering"):
             do_rendering = str2bool(a)
-        elif o in ("--map_type"):   # random or test map
+        elif o in ("--map_type"):   # random or example map
             map_type = a
         else:
             assert False, "unhandled option"
 
     # execute example
-    exampleMapToASP(True, True, map_type)
+    exampleMapToASP(sleep_for_animation, do_rendering, map_type)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,8 @@
+[run]
+relative_files = True
+source = src
+branch = True
+omit = tests\*
+
+[html]
+directory = tests/coverage/html_report/

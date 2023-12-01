@@ -19,14 +19,16 @@ def write_lines_to_file(*, path: str, file_name: str, lines: list[str]) -> None:
         The path is created if it does not exist.
     """
     create_path_if_not_exist(path=path)
+    file_path = os.path.join(path, file_name)
 
-    with open(f'{path}/{file_name}', 'w') as f:
+    with open(file_path, 'w') as f:
         f.writelines(f'{line}\n' for line in lines)
 
 
 def read_from_pickle_file(file_name: str, path: str = get_config().flatland_environments_path) -> RailEnv:
     """ Read Flatland environment from pickle file."""
-    env, _ = RailEnvPersister.load_new(filename=f'{path}{file_name}')
+    file_path = os.path.join(path, file_name)
+    env, _ = RailEnvPersister.load_new(filename=file_path)
 
     return env
 
@@ -38,5 +40,6 @@ def save_as_pickle_file(file_name: str,
         The path is created if it does not exist.
     """
     create_path_if_not_exist(path=path)
+    file_path = os.path.join(path, file_name)
 
-    RailEnvPersister.save(env=env, filename=f'{path}{file_name}')
+    RailEnvPersister.save(env=env, filename=file_path)

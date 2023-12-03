@@ -1,12 +1,12 @@
-% (agentID, start,target,starting-orientation)
-schedule(0,(1,0),(0,2),e).
-schedule(1,(1,3),(1,0),w).
+% (agentID, start,target,starting-orientation, departure-time)
+schedule(0,(1,0),(0,2),e,0).
+schedule(1,(1,2),(1,0),w,0).
 
 %grid definition cell((Y,X),train orientation, (possible directions))
 cell((1,0),e,(e)).
 cell((1,1),e,(n;e)).
 %cell((1,1),e,(e)).
-cell((0,1),n,(e)).
+cell((0,1),n,(e;m)).
 cell((0,2),e,(w)).
 cell((1,2),e,(w)).
 cell((1,2),w,(w)).
@@ -24,35 +24,39 @@ diff(n, -1, 0). % North
 diff(e, 0, 1).  % East
 diff(s, 1, 0).  % South
 diff(w, 0, -1). % West
+diff(m,0,0). %wait
 
 limit(10).
 
 %TODO: multi agent: agent id rein, alles anpassen
 %TODO collision constraints
+%TODO allow switch at station
 %TODO: implement waiting
+%idea: waiting only before switch?
 
 % choose direction
-{direction(D,T,ID):cell((X,Y),O,D)}=1 :- limit(L), 
+{direction(ID,D,T):cell((X,Y),O,D)}=1 :- limit(L), 
                                     T<L, 
                                     not done(ID,T),
                                     trans(ID,_,(X,Y),O,T). 
 
 % start path
-1{trans(ID,(X,Y),(X+A,Y+B),O,0):diff(D,A,B)}1 :- cell((X,Y),O,D), 
-                                            schedule(ID,(X,Y),(_,_),O).
+1{trans(ID,(X,Y),(X+A,Y+B),O,T):diff(D,A,B)}1 :- cell((X,Y),O,D), 
+                                            schedule(ID,(X,Y),_,O,T).
 
 % continue path
 trans(ID,(X,Y),(X+A,Y+B),D,T+1) :- trans(ID,_,(X,Y),_,T), 
-                                direction(D,T,ID), 
+                                direction(ID,D,T), 
                                 diff(D,A,B).
 
 % reached target?
-done(ID,T) :- schedule(_,_,(X,Y),_), trans(ID,_,(X,Y),_,T).
+done(ID,T) :- schedule(ID,_,(X,Y),_,_), trans(ID,_,(X,Y),_,T).
 
 %collision constraints:
 :- trans(ID,_,B,_,T), trans(ID',_,B,_,T), ID!=ID'. %no two on one field
+:- trans(ID,A,B,_,T), trans(ID',B,A,_,T), ID!=ID'. % no two past each other
 
 % Display the result
 #show trans/5.
 #show done/2.
-%#show sln/4.
+#show direction/3.

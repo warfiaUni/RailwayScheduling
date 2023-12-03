@@ -1,81 +1,66 @@
-% on cell (1,0):
-%cell((1,0),1,1). % a train facing east can go east
-%cell((1,0),3,1). % a train facing west can go east
-% on cell (1,1):
-%cell((1,1),1,1). % a train facing east can go east
-%cell((1,1),1,0). % a train facing east can also go north
-%cell((1,1),2,3). % a train facing south can go west
-%cell((1,1),3,3). % a train facing west can go west
-% and so on...
-%cell((1,2),3,3).
-%cell((1,2),1,3).
-%cell((0,1),0,1).
-%cell((0,1),3,2).
-%cell((0,2),3,3).
-%cell((0,2),1,3).
-
-% (start,target,starting-orientation)
-schedule((1,0),(0,2),e).
+% (agentID, start,target,starting-orientation, departure-time)
+schedule(0,(1,0),(0,2),e,0).
+schedule(1,(1,2),(1,0),w,0).
 
 %grid definition cell((Y,X),train orientation, (possible directions))
 cell((1,0),e,(e)).
-cell((1,1),e,(n)).
-cell((1,1),e,(e)).
+cell((1,1),e,(n;e)).
+%cell((1,1),e,(e)).
 cell((0,1),n,(e)).
 cell((0,2),e,(w)).
 cell((1,2),e,(w)).
+cell((1,2),w,(w;m)).
 
 cell((1,0),w,(e)).
 cell((1,1),s,(w)).
 cell((1,1),w,(w)).
 cell((0,1),w,(s)).
 
+%cell((1,3),w,(w)).
+%cell((1,3),e,(w)).
+
 % define differences to calculate adjacent cells
 diff(n, -1, 0). % North
 diff(e, 0, 1).  % East
 diff(s, 1, 0).  % South
 diff(w, 0, -1). % West
+diff(m,0,0). %wait
 
 limit(10).
 
+%TODO: implement waiting
+%idea: waiting only before switch?
 
-{direction(D,T):cell((X,Y),O,D)}=1 :- limit(L), 
+% choose direction
+{direction(ID,D,T):cell((X,Y),O,D)}=1 :- limit(L), 
                                     T<L, 
-                                    not done(T),
-                                    trans(_,(X,Y),O,T).
+                                    not done(ID,T),
+                                    trans(ID,_,(X,Y),O,T). 
 
-trans((X,Y),(X+A,Y+B),D,T+1) :- trans(_,(X,Y),_,T), direction(D,T), diff(D,A,B). 
+% start path
+1{trans(ID,(X,Y),(X+A,Y+B),O,T):diff(D,A,B),cell((X,Y),O,D)}1 :-  
+                                            schedule(ID,(X,Y),_,O,T).
 
-%TODO: timestep already in trans
-1{trans((X,Y),(X+A,Y+B),O,0):diff(D,A,B)}1 :- cell((X,Y),O,D), schedule((X,Y),(_,_),O).
+% continue path
+trans(ID,(X,Y),(X+A,Y+B),D,T+1) :- trans(ID,_,(X,Y),_,T), 
+                                direction(ID,D,T), 
+                                diff(D,A,B),
+                                D != m.
 
-% create path to possible next cell from each cell regarding train [O]rientation
-%{trans((X,Y),(X+A,Y+B),O,T+1):diff(D,A,B)} = 1 :-   cell((X,Y),O,D), 
-%                                                    limit(L), 
-%                                                    T<L, 
-%                                                    not done, 
-%                                                    trans(_,(X,Y),O,T).
+% continue path when action is waiting
+trans(ID,(X,Y),(X+A,Y+B),O,T+1) :- trans(ID,_,(X,Y),O,T), 
+                                direction(ID,D,T), 
+                                diff(D,A,B),
+                                D == m. % if wait take previous O
 
-%:-trans(_,(X,Y),_,T), trans(_,(X',Y'),_,T), (X-X')**2+(Y-Y')**2!=0.
+% reached target?
+done(ID,T) :- schedule(ID,_,(X,Y),_,_), trans(ID,_,(X,Y),_,T).
 
-% define begin of solution
-%sln((X,Y),(X2,Y2),0,O) :- schedule((X,Y),(_,_),O), trans((X,Y),(X2,Y2),O).
+%collision constraints:
+:- trans(ID,_,B,_,T), trans(ID',_,B,_,T), ID!=ID'. %no two on one field
+:- trans(ID,A,B,_,T), trans(ID',B,A,_,T), ID!=ID'. % no two past each other
 
-% continue solution path sln((X,Y),(X2,Y2),[T]imestep, train [O]rientation) until target is reached (M,N)
-%sln((X,Y),(X2,Y2),T+1,NEWO) :- trans((X,Y),(X2,Y2),O), sln((_,_),(X,Y),T,O), schedule((_,_),(M,N),_), diff(NEWO,X2-X,Y2-Y), (X,Y) != (M,N), T<3.
-
-done(T) :- schedule((_,_),(X,Y),_), trans(_,(X,Y),_,T).
-
-%:- not done.
 % Display the result
-#show trans/4.
-#show done/1.
-%#show sln/4.
-
-
-
-
-
-
-
-
+#show trans/5.
+#show done/2.
+%#show direction/3.

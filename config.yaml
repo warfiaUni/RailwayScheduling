@@ -1,0 +1,7 @@
+rasch_config: !config
+  default_encoding: 'test'
+  default_environment: 'simple_switch_map'
+  asp_encodings_path: 'data/encodings/'
+  asp_instances_path: 'data/instances/'
+  flatland_environments_path: 'data/environments/'
+  solver_output_path: 'data/solutions/'

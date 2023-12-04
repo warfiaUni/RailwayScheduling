@@ -1,57 +1,51 @@
-% (agentID, start,target,starting-orientation, departure-time)
-schedule(0,(1,0),(0,2),e,0).
-schedule(1,(1,2),(1,0),w,0).
+limit(5).
+
+% (agentID,start,target,starting-orientation)
+schedule(0,(1, 0),(0, 2),1,0).
+schedule(1,(1, 2),(1, 0),3,1).
 
 %grid definition cell((Y,X),train orientation, (possible directions))
-cell((1,0),e,(e)).
-cell((1,1),e,(n;e)).
-%cell((1,1),e,(e)).
-cell((0,1),n,(e)).
-cell((0,2),e,(w)).
-cell((1,2),e,(w)).
-cell((1,2),w,(w;m)).
-
-cell((1,0),w,(e)).
-cell((1,1),s,(w)).
-cell((1,1),w,(w)).
-cell((0,1),w,(s)).
-
-%cell((1,3),w,(w)).
-%cell((1,3),e,(w)).
+cell((0,1),0,(1)).
+cell((0,1),3,(2)).
+cell((0,2),3,(3)).
+cell((0,2),1,(3)).
+cell((1,0),1,(1)).
+cell((1,0),3,(1)).
+cell((1,1),1,(0;1)).
+cell((1,1),2,(3)).
+cell((1,1),3,(3)).
+cell((1,2),3,(3)).
+cell((1,2),1,(3)).
 
 % define differences to calculate adjacent cells
-diff(n, -1, 0). % North
-diff(e, 0, 1).  % East
-diff(s, 1, 0).  % South
-diff(w, 0, -1). % West
-diff(m,0,0). %wait
+diff(0, -1, 0). % North
+diff(1, 0, 1).  % East
+diff(2, 1, 0).  % South
+diff(3, 0, -1). % West
 
-limit(10).
-
-%TODO: implement waiting
-%idea: waiting only before switch?
-
-% choose direction
-{direction(ID,D,T):cell((X,Y),O,D)}=1 :- limit(L), 
-                                    T<L, 
-                                    not done(ID,T),
-                                    trans(ID,_,(X,Y),O,T). 
+%TODO: waiting in station
 
 % start path
 1{trans(ID,(X,Y),(X+A,Y+B),O,T):diff(D,A,B),cell((X,Y),O,D)}1 :-  
                                             schedule(ID,(X,Y),_,O,T).
 
+% choose direction
+{direction(ID,D,T):cell((X,Y),O,D)}1 :- limit(L), 
+                                    T<L, 
+                                    not done(ID,T),
+                                    trans(ID,_,(X,Y),O,T). 
+
 % continue path
 trans(ID,(X,Y),(X+A,Y+B),D,T+1) :- trans(ID,_,(X,Y),_,T), 
                                 direction(ID,D,T), 
-                                diff(D,A,B),
-                                D != m.
+                                diff(D,A,B).
 
 % continue path when action is waiting
-trans(ID,(X,Y),(X+A,Y+B),O,T+1) :- trans(ID,_,(X,Y),O,T), 
-                                direction(ID,D,T), 
-                                diff(D,A,B),
-                                D == m. % if wait take previous O
+trans(ID,(X,Y),(X,Y),O,T+1) :- trans(ID,_,(X,Y),O,T), 
+                                not direction(ID,_,T),
+                                limit(L), 
+                                T<L,
+                                not done(ID,T).
 
 % reached target?
 done(ID,T) :- schedule(ID,_,(X,Y),_,_), trans(ID,_,(X,Y),_,T).
@@ -62,5 +56,11 @@ done(ID,T) :- schedule(ID,_,(X,Y),_,_), trans(ID,_,(X,Y),_,T).
 
 % Display the result
 #show trans/5.
-#show done/2.
-%#show direction/3.
+#show fl_action/3.
+
+%turn into flatland actions
+%TODO: no_op=0,left=1,forward=2,right=3,wait=4
+fl_action(ID,1,T) :- trans(ID,_,_,OLD,T),trans(ID,_,_,NEW,T+1), NEW == (OLD+3)\4, not fl_action(ID,4,T). %left
+fl_action(ID,2,T) :- trans(ID,_,_,OLD,T),trans(ID,_,_,NEW,T+1), NEW == OLD, not fl_action(ID,4,T).
+fl_action(ID,3,T) :- trans(ID,_,_,OLD,T),trans(ID,_,_,NEW,T+1), NEW == (OLD+1)\4, not fl_action(ID,4,T). %right
+fl_action(ID,4,T) :- trans(ID,A,B,_,T), A==B.

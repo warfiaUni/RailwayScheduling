@@ -13,14 +13,14 @@ def schedule_literal(agent) -> str:
             f"{agent.handle}"
             f",{agent.initial_position}"
             f",{agent.target}"
-            f",{Direction(agent.direction).name}"
+            f",{agent.direction}"
             f",{agent.earliest_departure}"
             f").")
 
 
 def cell_literal(x: int, y: int, agent_orientation: Direction, directions: list[Direction]) -> str:
     """ Get cell description as ASP literal."""
-    return f"cell(({x},{y}),{agent_orientation.name},({';'.join([direction.name for direction in directions])}))."
+    return f"cell(({x},{y}),{agent_orientation.value},({';'.join([str(direction.value) for direction in directions])}))."
 
 
 def generate_instance_lines(env: RailEnv, limit: int) -> list[str]:

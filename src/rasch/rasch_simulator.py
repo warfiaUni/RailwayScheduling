@@ -26,6 +26,10 @@ class RaSchSimulator:
                          max_steps: int = 30,
                          step_delay: float = 0.5,
                          render: bool = False) -> None:
+        # Set Flatland horizon,
+        # this should be similar to the ASP horizon
+        self.environment._max_episode_steps = max_steps
+
         step = 0
         agents_step = {}
         for id, actions in agent_actions.items():
@@ -63,3 +67,7 @@ class RaSchSimulator:
 
                 time.sleep(step_delay)
             step += 1
+        # Show last frame
+        if render:
+            self.renderer.render_env(
+                show=True, show_rowcols=True, show_observations=False)

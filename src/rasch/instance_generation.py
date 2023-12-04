@@ -14,6 +14,7 @@ def schedule_literal(agent) -> str:
             f",{agent.initial_position}"
             f",{agent.target}"
             f",{Direction(agent.direction).name}"
+            f",{agent.earliest_departure}"
             f").")
 
 
@@ -59,6 +60,12 @@ def generate_instance_lines(env: RailEnv, limit: int) -> list[str]:
 
                     if valid:
                         valid_directions.append(Direction(j))
+
+                        # if the cell is a dead end
+                        # add the possibility to move
+                        # off of it in case the agent starts on it
+                        if j == (i+2) % 4:
+                            valid_directions.append(Direction(i))
 
                 if len(valid_directions) > 0:
                     cells.append(cell_literal(

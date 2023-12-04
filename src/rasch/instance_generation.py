@@ -65,7 +65,8 @@ def generate_instance_lines(env: RailEnv, limit: int) -> list[str]:
                         # add the possibility to move
                         # off of it in case the agent starts on it
                         if j == (i+2) % 4:
-                            valid_directions.append(Direction(i))
+                            cells.append(cell_literal(
+                                y, x, Direction(j), [Direction(j)]))
 
                 if len(valid_directions) > 0:
                     cells.append(cell_literal(

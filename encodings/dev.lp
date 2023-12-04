@@ -55,6 +55,7 @@ count(A,O,C) :- C = #count{D:cell(A,O,D)},cell(A,O,_).
 agent_action(ID, 4,T):- trans(ID,A,A,_,T).
 agent_action(ID, 2,T):- trans(ID,A,B,_,T), trans(ID,_,A,O,T-1), A!=B, count(A,O,1).
 agent_action(ID, 2,0):- trans(ID,A,B,_,0), schedule(ID,A,_,O,0), A!=B, count(A,O,1).
+agent_action(ID, 2,T):- trans(ID,A,B,O,T), trans(ID,_,A,O,T-1), A!=B, count(A,O,2).
 
 %right
 agent_action(ID, 3, T) :- trans(ID,A,B,AO,T), 

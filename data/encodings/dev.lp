@@ -1,29 +1,3 @@
-limit(5).
-
-% (agentID,start,target,starting-orientation)
-schedule(0,(1, 0),(0, 2),1,0).
-schedule(1,(1, 2),(1, 0),3,1).
-
-%grid definition cell((Y,X),train orientation, (possible directions))
-cell((0,1),0,(1)).
-cell((0,1),3,(2)).
-cell((0,2),3,(3)).
-cell((0,2),1,(3)).
-cell((1,0),1,(1)).
-cell((1,0),3,(1)).
-cell((1,1),1,(0;1)).
-cell((1,1),2,(3)).
-cell((1,1),3,(3)).
-cell((1,2),3,(3)).
-cell((1,2),1,(3)).
-
-% define differences to calculate adjacent cells
-diff(0, -1, 0). % North
-diff(1, 0, 1).  % East
-diff(2, 1, 0).  % South
-diff(3, 0, -1). % West
-
-
 % start path
 1{trans(ID,(X,Y),(X+A,Y+B),D,T):diff(D,A,B),cell((X,Y),O,D);trans(ID,(X,Y),(X,Y),O,T)}1 :-  
                                             schedule(ID,(X,Y),_,O,T).
@@ -82,8 +56,8 @@ agent_action(ID, 1, T) :- trans(ID,A,B,AO,T),
 
 
 % Display the result
-%#show trans/5.
-%#show done/2.
-%#show direction/3.
+#show trans/5.
+#show done/2.
+#show direction/3.
 #show agent_action/3.
 %#show count/3.

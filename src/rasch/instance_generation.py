@@ -35,7 +35,7 @@ def generate_instance_lines(env: RailEnv, limit: int) -> list[str]:
     limit_literal = f"limit({limit})."
 
     schedules = ["",
-                 "% (agentID,start,target,starting-orientation)",
+                 "% (agentID,start,target,starting-orientation,earliest-departure)",
                  *[schedule_literal(agent) for agent in env.agents]
                  ]
 

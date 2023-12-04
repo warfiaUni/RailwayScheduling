@@ -76,10 +76,10 @@ def generate_instance_lines(env: RailEnv, limit: int) -> list[str]:
     diffs = [
         "",
         "% define differences to calculate adjacent cells",
-        "diff(n, -1, 0). % North",
-        "diff(e, 0, 1).  % East",
-        "diff(s, 1, 0).  % South",
-        "diff(w, 0, -1). % West",
+        "diff(0, -1, 0). % North",
+        "diff(1, 0, 1).  % East",
+        "diff(2, 1, 0).  % South",
+        "diff(3, 0, -1). % West",
     ]
 
     return [limit_literal, *schedules, *cells, *diffs]

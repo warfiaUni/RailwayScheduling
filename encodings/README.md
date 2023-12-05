@@ -180,3 +180,44 @@ Cell `(1,3)` has `2` choices when a train enters the cell with north `0` orienta
 
 </details>
 
+# Example Solution
+![dd](../media/media/simple-switch.png)
+##### Generated Instance for the encoding
+```
+limit(5).
+
+% (agentID,start,target,starting-orientation)
+schedule(0,(1, 0),(0, 2),1,0). %agent starts with East Orientation
+
+%grid definition cell((Y,X),train orientation, (possible directions))
+cell((0,1),0,(1)).
+cell((0,1),3,(2)).
+cell((0,2),3,(3)).
+cell((0,2),1,(3)).
+cell((1,0),1,(1)).
+cell((1,0),3,(1)).
+cell((1,1),1,(0;1)).
+cell((1,1),2,(3)).
+cell((1,1),3,(3)).
+cell((1,2),3,(3)).
+cell((1,2),1,(3)).
+
+% define differences to calculate adjacent cells
+diff(0, -1, 0). % North
+diff(1, 0, 1).  % East
+diff(2, 1, 0).  % South
+diff(3, 0, -1). % West
+```
+
+#####Minimized Output:
+```
+%path
+trans(0,(1,0),(1,1),1,0) 
+trans(0,(1,1),(0,1),0,1)
+trans(0,(0,1),(0,2),1,2) 
+
+%translation for Flatland
+agent_action(0,2,0) % agent starts with east orientation, so forward
+agent_action(0,1,1) % left turn
+agent_action(0,2,2) % forward
+```

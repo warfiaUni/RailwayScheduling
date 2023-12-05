@@ -181,12 +181,12 @@ Cell `(1,3)` has `2` choices when a train enters the cell with north `0` orienta
 </details>
 
 # Example Solution
-![dd]([../media/media/simple-switch.png](https://github.com/warfiaUni/RailwayScheduling/blob/cb4a64a8e57913c558f4f8876aead8f7d9189e39/media/simple-switch.png))
-##### Generated Instance for the encoding
+![alt text](https://github.com/warfiaUni/RailwayScheduling/blob/cb4a64a8e57913c558f4f8876aead8f7d9189e39/media/simple-switch.png?raw=true)
+### Generated Instance for the encoding:
 ```
 limit(5).
 
-% (agentID,start,target,starting-orientation)
+% (agentID,start,target,starting-orientation, earliest-departure)
 schedule(0,(1, 0),(0, 2),1,0). %agent starts with East Orientation
 
 %grid definition cell((Y,X),train orientation, (possible directions))
@@ -209,7 +209,8 @@ diff(2, 1, 0).  % South
 diff(3, 0, -1). % West
 ```
 
-#####Minimized Output:
+### Minimized Output:
+
 ```
 %path
 trans(0,(1,0),(1,1),1,0) 

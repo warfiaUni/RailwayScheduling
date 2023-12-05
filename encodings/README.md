@@ -181,7 +181,7 @@ Cell `(1,3)` has `2` choices when a train enters the cell with north `0` orienta
 </details>
 
 # Example Solution
-![dd](../media/media/simple-switch.png)
+![dd]([../media/media/simple-switch.png](https://github.com/warfiaUni/RailwayScheduling/blob/cb4a64a8e57913c558f4f8876aead8f7d9189e39/media/simple-switch.png))
 ##### Generated Instance for the encoding
 ```
 limit(5).

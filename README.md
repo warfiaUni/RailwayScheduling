@@ -116,13 +116,13 @@ cell((Y,X),O,(D)).
 <summary>Examples</summary>
 
 ```
-cell((1,4),n,(e)).
+cell((1,4),0,(1)).
 ```
 
 Represents the cell that is 2nd from the top and 5th from the left. The cell allows an agent that is oriented northward to only move east (turn right).
 
 ```
-cell((3,2),e,(e;s)).
+cell((3,2),1,(1;2)).
 ```
 
 Cells can also have multiple possible directions, here east and south, the agent can move towards.
@@ -134,11 +134,12 @@ Cells can also have multiple possible directions, here east and south, the agent
 Schedules define the start and end configurations of agents.
 
 ```
-schedule(agentID,(start),(target),starting-orientation).
+schedule(agentID,(start),(target),starting-orientation, earliest departure).
     agentID              - unique identifier of the agent
     start                - (Y,X) initial position of agent
     target               - (Y,X) target of agent
     starting-orientation - orientation of the agent before departure
+    earliest-departure   
 
 ```
 
@@ -158,10 +159,10 @@ Represents the schedule of the agent with id 1. It starts at (1,1) with an eastw
 To move in a specific direction the difference between current position and new position has to be known.
 
 ```
-diff(n, -1, 0). % North
-diff(e, 0, 1).  % East
-diff(s, 1, 0).  % South
-diff(w, 0, -1). % West
+diff(0, -1, 0). % North
+diff(1, 0, 1).  % East
+diff(2, 1, 0).  % South
+diff(3, 0, -1). % West
 ```
 
 These are the four possible position differences. The application of them to a current position results in the new position.

@@ -48,21 +48,14 @@ class RaSchSolver:
             self.agent_actions = {}
         else:
             return
-        """
+
         for symbol in symbols:
             if symbol.name == "agent_action":
                 id = symbol.arguments[0].number
                 action = symbol.arguments[1].number
+                step = symbol.arguments[2].number
 
-                self.agent_actions.setdefault(id, []).append(action)
-
-            if symbol.name == "agent_position":
-                id = symbol.arguments[0].number
-                x = symbol.arguments[1].number
-                y = symbol.arguments[2].number
-                handle = self.environment.agents[id].handle
-
-                self.agent_paths.setdefault(handle, []).append((y, x))"""
+                self.agent_actions.setdefault(id, {})[step] = action
 
     def solve(self, encoding_name: str, instance_name: str = "test_instance", limit: int = 20):
         self._logger.info("Creating instance.")

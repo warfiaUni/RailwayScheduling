@@ -82,7 +82,7 @@ class RaSchSolver:
         self._logger.info(
             f"Finished solving, best model has {self.number_of_symbols} symbols.")
 
-    def save(self, name: str = "test_solve") -> None:
+    def save(self, file_name: str = "test_solve.json") -> None:
         solve_data = {
             "solution": {
                 "agent_paths": self.agent_paths,
@@ -93,5 +93,5 @@ class RaSchSolver:
 
         create_path_if_not_exist(path=self._config.solver_output_path)
 
-        with open(f'{self._config.solver_output_path}{name}.json', 'w') as f:
+        with open(f'{self._config.solver_output_path}{file_name}', 'w') as f:
             f.write(json.dumps(solve_data, indent=4))

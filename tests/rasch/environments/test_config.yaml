@@ -1,4 +1,5 @@
-asp_encodings_path: 'data/encodings/'
-asp_instances_path: 'tests/rasch/instances/'
-flatland_environments_path: 'tests/rasch/environments/'
-solver_output_path : 'tests/rasch/tmp/'
+rasch_config: !config
+  asp_encodings_path: 'data/encodings/'
+  asp_instances_path: 'tests/rasch/instances/'
+  flatland_environments_path: 'tests/rasch/environments/'
+  solver_output_path: 'tests/rasch/tmp/'

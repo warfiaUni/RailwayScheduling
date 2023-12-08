@@ -17,7 +17,7 @@ def main():
     args = sys.argv[1:]
     try:
 
-        if len(args) < 2:
+        if len(args) < 3:
             args = [get_config().default_encoding,
                     get_config().default_environment,
                     20] #TODO: default_limit
@@ -29,9 +29,11 @@ def main():
         env = read_from_pickle_file(f'{environment_name}.pkl')
         env.reset()
 
-        logger.info("Creating instance.")
+        instance_name = f"{encoding_name}_{environment_name}_instance"
+        logger.info(f"Creating instance: {instance_name}.")
         instance_lines = generate_instance_lines(env, limit)
-        write_lines_to_file(file_name=f"{encoding_name}_{environment_name}_instance.json",
+      
+        write_lines_to_file(file_name=f"{instance_name}.lp",
                             path=get_config().asp_instances_path,
                             lines=instance_lines)
 
@@ -40,7 +42,7 @@ def main():
                              clingo_control=clingo_control,
                              logger=logger
                              )
-        solver.solve(encoding_name)
+        solver.solve(encoding_name,instance_name)
         solver.save()
 
         if len(solver.agent_actions.items()) == 0:

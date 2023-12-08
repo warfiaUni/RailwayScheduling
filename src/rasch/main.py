@@ -3,7 +3,8 @@ import sys
 from clingo import Control
 from flatland.utils.rendertools import AgentRenderVariant, RenderTool
 
-from rasch.file import read_from_pickle_file
+from rasch.file import read_from_pickle_file, write_lines_to_file
+from rasch.instance_generation import generate_instance_lines
 from rasch.logging import get_logger
 from rasch.rasch_config import get_config
 from rasch.rasch_simulator import RaSchSimulator
@@ -18,13 +19,21 @@ def main():
 
         if len(args) < 2:
             args = [get_config().default_encoding,
-                    get_config().default_environment]
+                    get_config().default_environment,
+                    20] #TODO: default_limit
 
         encoding_name = args[0]
         environment_name = args[1]
+        limit = args[2]
 
         env = read_from_pickle_file(f'{environment_name}.pkl')
         env.reset()
+
+        logger.info("Creating instance.")
+        instance_lines = generate_instance_lines(env, limit)
+        write_lines_to_file(file_name=f"{encoding_name}_{environment_name}_instance.json",
+                            path=get_config().asp_instances_path,
+                            lines=instance_lines)
 
         clingo_control = Control()
         solver = RaSchSolver(environment=env,

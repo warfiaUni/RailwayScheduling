@@ -58,13 +58,6 @@ class RaSchSolver:
                 self.agent_actions.setdefault(id, {})[step] = action
 
     def solve(self, encoding_name: str, instance_name: str = "test_instance", limit: int = 20):
-        self._logger.info("Creating instance.")
-
-        instance_lines = generate_instance_lines(self.environment, limit=limit)
-
-        write_lines_to_file(file_name=f"{instance_name}.lp",
-                            path=self._config.asp_instances_path,
-                            lines=instance_lines)
         # Load instance from file
         self.clingo_control.load(
             f"{self._config.asp_instances_path}{instance_name}.lp")

@@ -7,7 +7,7 @@ def dict_safe_function():
 
 class TestSimpleSwitchInstance():
     def test_model_is_not_empty(self,json_simple_switch_map_from_instance):
-        assert json_simple_switch_map_from_instance['models'] != [], f"No models in solution JSON. {json_simple_switch_map['models']}"
+        assert json_simple_switch_map_from_instance['models'] != [], f"No models in solution JSON. {json_simple_switch_map_from_instance['models']}"
 
     def test_agent_starts_from_start(self,json_simple_switch_map_from_instance):
         first_model = json_simple_switch_map_from_instance["models"][0]

@@ -21,10 +21,10 @@ target-version = "py310"
 
 [tool.pytest.ini_options]
 pythonpath = "src"
-timeout=5
 addopts = [
-    "--import-mode=importlib",
+    "--import-mode=importlib"
 ]
 testpaths = [
-    "tests",
+    "tests"
 ]
+timeout = "5"

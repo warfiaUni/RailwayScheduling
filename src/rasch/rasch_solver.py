@@ -6,14 +6,13 @@ from clingo import Model
 from clingo.control import Control
 from flatland.envs.rail_env import RailEnv
 
-from rasch.file import create_path_if_not_exist, write_lines_to_file
-from rasch.instance_generation import generate_instance_lines
+from rasch.file import create_path_if_not_exist
 from rasch.rasch_config import RaSchConfig, get_config
 
 
 class RaSchSolver:
     def __init__(self, *,
-                 environment: RailEnv,
+                 environment: RailEnv = None,
                  clingo_control: Control,
                  logger: Logger,
                  config: RaSchConfig = get_config()) -> None:

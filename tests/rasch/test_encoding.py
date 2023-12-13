@@ -29,8 +29,8 @@ class TestSimpleSwitchInstance():
     def test_agent_ends_at_end(self,json_simple_switch_map_from_instance):
         first_model = json_simple_switch_map_from_instance["models"][0]
 
-        pattern0 = re.compile(r'trans\(0,.*,\(1,0\).*\)') #pattern "trans(1,...,(1,0)..."
-        pattern1 = re.compile(r'trans\(0,.*,\(1,2\).*\)')
+        pattern0 = re.compile(r'trans\(0,.*,\(1,0\).*\)') #pattern "trans(0,...,(1,0)..."
+        pattern1 = re.compile(r'trans\(1,.*,\(1,2\).*\)')
         found_0 = False
         found_1 = False
 

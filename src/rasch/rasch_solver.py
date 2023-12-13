@@ -6,14 +6,13 @@ from clingo import Model
 from clingo.control import Control
 from flatland.envs.rail_env import RailEnv
 
-from rasch.file import create_path_if_not_exist, write_lines_to_file
-from rasch.instance_generation import generate_instance_lines
+from rasch.file import create_path_if_not_exist
 from rasch.rasch_config import RaSchConfig, get_config
 
 
 class RaSchSolver:
     def __init__(self, *,
-                 environment: RailEnv,
+                 environment: RailEnv = None,
                  clingo_control: Control,
                  logger: Logger,
                  config: RaSchConfig = get_config()) -> None:
@@ -57,14 +56,7 @@ class RaSchSolver:
 
                 self.agent_actions.setdefault(id, {})[step] = action
 
-    def solve(self, encoding_name: str, instance_name: str = "test_instance", limit: int = 20):
-        self._logger.info("Creating instance.")
-
-        instance_lines = generate_instance_lines(self.environment, limit=limit)
-
-        write_lines_to_file(file_name=f"{instance_name}.lp",
-                            path=self._config.asp_instances_path,
-                            lines=instance_lines)
+    def solve(self, encoding_name: str, instance_name: str):
         # Load instance from file
         self.clingo_control.load(
             f"{self._config.asp_instances_path}{instance_name}.lp")
@@ -82,7 +74,7 @@ class RaSchSolver:
         self._logger.info(
             f"Finished solving, best model has {self.number_of_symbols} symbols.")
 
-    def save(self, name: str = "test_solve") -> None:
+    def save(self, file_name: str = "test_solve.json") -> None:
         solve_data = {
             "solution": {
                 "agent_paths": self.agent_paths,
@@ -93,5 +85,5 @@ class RaSchSolver:
 
         create_path_if_not_exist(path=self._config.solver_output_path)
 
-        with open(f'{self._config.solver_output_path}{name}.json', 'w') as f:
+        with open(f'{self._config.solver_output_path}{file_name}', 'w') as f:
             f.write(json.dumps(solve_data, indent=4))

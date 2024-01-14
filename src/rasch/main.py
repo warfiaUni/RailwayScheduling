@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from clingo import Control
 from flatland.utils.rendertools import AgentRenderVariant, RenderTool
@@ -23,7 +24,10 @@ def main():
 
         if(args.benchmark == 'all'): 
             benchmark = Benchmark(logger=logger)
-            benchmark.benchmark_all(args)
+            benchmark.bench_all(args)
+        elif(args.benchmark == 'env'): #compare encodings on one environment from config
+            benchmark = Benchmark(logger=logger)
+            benchmark.bench_encs(args, environment_name)
         else:
             env = read_from_pickle_file(f'{environment_name}.pkl')
             env.reset()
@@ -43,6 +47,10 @@ def main():
                                 )
             solver.solve(encoding_name,instance_name)
             solver.save()
+
+            if(args.benchmark != None): # -b without value? benchmark specified encoding and env
+                benchmark = Benchmark(logger=logger)
+                benchmark.basic_save(clingo_control, name=encoding_name)
 
             if len(solver.agent_actions.items()) == 0:
                 logger.warning(
@@ -71,5 +79,5 @@ def define_args():
     parser.add_argument('encoding', default=get_config().default_encoding, nargs='?')
     parser.add_argument('environment', default=get_config().default_environment, nargs='?')
     parser.add_argument('limit', default=20, nargs='?') 
-    parser.add_argument('-b','--benchmark', type=str)
+    parser.add_argument('-b','--benchmark', type=str, nargs='?', const='')
     return parser.parse_args()

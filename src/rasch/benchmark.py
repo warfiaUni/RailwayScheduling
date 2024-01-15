@@ -2,7 +2,9 @@ import json
 import os
 from logging import Logger
 
+import pandas as pd
 from clingo.control import Control
+from matplotlib import pyplot as plt
 
 from rasch.file import read_from_pickle_file, write_lines_to_file
 from rasch.instance_generation import generate_instance_lines
@@ -20,7 +22,11 @@ class Benchmark:
         self._logger = logger
         self._config = config
 
-     def environment_setup(self, env_name, enc_name, stats={}, limit=20):
+     def environment_setup(self, 
+                           env_name: str, 
+                           enc_name: str, 
+                           stats: list, 
+                           limit=20) -> dict:
           try:
                env = read_from_pickle_file(f'{env_name}.pkl')
                env.reset()
@@ -42,24 +48,25 @@ class Benchmark:
 
                #save verbose stats #TODO: in tmp directory
                #self.basic_save(clingo_control, name=f'{encoding}_{name}')
-
-               stats[enc_name][env_name] = clingo_control.statistics['summary']['times']['choices']
+               
+               #stats[env_name][enc_name] = clingo_control.statistics['solving']['solvers']['choices']
 
                if len(solver.agent_actions.items()) == 0:
                     self._logger.warning(
                          "No actions generated, check the solver and ASP encoding.")
 
-               return stats
+               return clingo_control.statistics['solving']['solvers']['choices']
           
           except FileNotFoundError as e:
                self._logger.error(f"{e}")
           except RuntimeError as parse_error:
                if "parsing failed" in str(parse_error):
                     self._logger.error(f"Parsing failed for encoding: {enc_name} with environment: {env_name}")
-                    return
+                    return None
                raise
 
-     def basic_save(self, clingo_control, name = 'test'):
+     def basic_save(self, clingo_control, name = 'test') -> None:
+          """helper to save basic stats from clingo_control to a file"""
           stat_path = 'data/statistics/' #TODO: into config
           #output basic stats to file
           stats_times = clingo_control.statistics['summary']['times']
@@ -74,7 +81,19 @@ class Benchmark:
           with open(f'{stat_path}{name}_stats.json', 'w') as f: 
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 
-     def bench_envs(self, stats = {}, enc_name = 'test', limit = 20):
+     def bench_envs(self, stats: list, enc_name = 'test', limit = 20) -> None:
+          """
+          benchmark one encoding on all environments found in flatland_environments_path from the config
+          
+          Parameters
+          ----------
+          stats : list
+               empty list
+          enc_name : str
+               name of the encoding (.lp-file)
+          limit : int
+               timestep limit, passed to encoding
+          """
           env_dir = get_config().flatland_environments_path
           stat_path = 'data/statistics/'
 
@@ -82,6 +101,7 @@ class Benchmark:
                if not file.endswith('.pkl'):
                     continue
                try:
+                    #TODO: environment_setup?
                     name = os.path.splitext(file)[0]
 
                     env = read_from_pickle_file(f'{file}')
@@ -120,23 +140,32 @@ class Benchmark:
                          return
                     raise
 
-     def bench_encs(self, args, environment_name):
+     def bench_encs(self, args, environment_name: str) -> None:
+          """
+          benchmark one environment on all encodings found in asp_encodings_path from the config
+
+          Parameters
+          ----------
+          args : Namespace
+               arguments from argparse
+          environment_name : str
+               name of the .pkl-file
+          """
           enc_dir = get_config().asp_encodings_path
+          stat_path = 'data/statistics/'
           stats = {}
-          stat_path = 'data/statistics'
 
           for enc in os.listdir(enc_dir): #iterate through encodings
                if not enc.endswith('.lp'):
                     continue
                enc_name = os.path.splitext(enc)[0]
-
-               stats[enc_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, stats = stats,limit=args.limit) #environment setup
-               
+               stats[enc_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, stats=stats, limit=args.limit) #environment setup
 
           self._logger.info(f"Statistics saved to: {stat_path}_{environment_name}_stats.json")
-          with open(f'{stat_path}_{environment_name}_stats.json', 'w') as f: 
+          with open(f'{stat_path}{environment_name}_stats.json', 'w') as f: 
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 
+          self.visualise(stats, environment_name=environment_name)
 
      def bench_all(self, args):
           enc_dir = get_config().asp_encodings_path
@@ -156,5 +185,18 @@ class Benchmark:
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 
                
-     
+     def visualise(self, stats: dict, environment_name: str):
+          #turn dict into series
+          s = pd.Series(stats)
+          # Create a bar plot
+          s.plot(kind='bar')
+
+          # Add labels and title
+          plt.xlabel('Encoding')
+          plt.ylabel('Number of choices')
+          plt.title(environment_name)
+
+          # Display the plot
+          plt.show()
+
 

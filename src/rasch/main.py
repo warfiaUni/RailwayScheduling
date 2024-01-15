@@ -22,10 +22,10 @@ def main():
         environment_name = args.environment
         limit = args.limit
 
-        if(args.benchmark == 'all'): 
+        if(args.benchmark == 'all'): #benchmark all encodings and all environments
             benchmark = Benchmark(logger=logger)
             benchmark.bench_all(args)
-        elif(args.benchmark == 'env'): #compare encodings on one environment from config
+        elif(args.benchmark == 'enc'): #compare encodings on one environment from config
             benchmark = Benchmark(logger=logger)
             benchmark.bench_encs(args, environment_name)
         else:
@@ -48,7 +48,7 @@ def main():
             solver.solve(encoding_name,instance_name)
             solver.save()
 
-            if(args.benchmark != None): # -b without value? benchmark specified encoding and env
+            if(args.benchmark == ""): # -b has no argument, give benchmark for this encoding and env
                 benchmark = Benchmark(logger=logger)
                 benchmark.basic_save(clingo_control, name=encoding_name)
 

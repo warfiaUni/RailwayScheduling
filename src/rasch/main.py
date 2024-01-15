@@ -28,6 +28,9 @@ def main():
         elif(args.benchmark == 'enc'): #compare encodings on one environment from config
             benchmark = Benchmark(logger=logger)
             benchmark.bench_encs(args, environment_name)
+        elif(args.benchmark == 'env'): #compare enviornments on one encoding
+            benchmark = Benchmark(logger=logger)
+            benchmark.bench_envs(args, encoding_name)
         else:
             env = read_from_pickle_file(f'{environment_name}.pkl')
             env.reset()
@@ -79,5 +82,5 @@ def define_args():
     parser.add_argument('encoding', default=get_config().default_encoding, nargs='?')
     parser.add_argument('environment', default=get_config().default_environment, nargs='?')
     parser.add_argument('limit', default=20, nargs='?') 
-    parser.add_argument('-b','--benchmark', type=str, nargs='?', const='')
+    parser.add_argument('-b','--benchmark', type=str, nargs='?', const='', choices=['','all','env','enc'], help="Activates Benchmarking. This outputs statistics to a file.")
     return parser.parse_args()

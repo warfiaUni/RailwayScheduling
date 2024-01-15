@@ -81,7 +81,7 @@ class Benchmark:
           with open(f'{stat_path}{name}_stats.json', 'w') as f: 
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 
-     def bench_envs(self, stats: list, enc_name = 'test', limit = 20) -> None:
+     def bench_envs(self, stats: list, enc_name = 'test', limit = 20) -> dict:
           """
           benchmark one encoding on all environments found in flatland_environments_path from the config
           
@@ -95,50 +95,26 @@ class Benchmark:
                timestep limit, passed to encoding
           """
           env_dir = get_config().flatland_environments_path
-          stat_path = 'data/statistics/'
+          stat_path = 'data/statistics/' #TODO
+          stats = {}
 
-          for file in os.listdir(env_dir): #iterate through environments
-               if not file.endswith('.pkl'):
+          for env in os.listdir(env_dir): #iterate through environments
+               if not env.endswith('.pkl'):
                     continue
-               try:
-                    #TODO: environment_setup?
-                    name = os.path.splitext(file)[0]
+               env_name = os.path.splitext(env)[0]
+               stats[env_name] = self.environment_setup(env_name=env_name, enc_name=enc_name, stats=stats, limit=limit) #environment setup
+          
+          save_fn = f"{stat_path}{enc_name}_stats.json"
+          self._logger.info(f"Statistics saved to: {save_fn}")
+          with open(f'{save_fn}', 'w') as f: 
+               json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 
-                    env = read_from_pickle_file(f'{file}')
-                    env.reset()
-                    instance_name = f"{enc_name}_{name}_instance"
-                    self._logger.info(f"Creating instance: {instance_name}.")
-                    instance_lines = generate_instance_lines(env, limit)
-               
-                    write_lines_to_file(file_name=f"{instance_name}.lp",
-                                        path=get_config().asp_instances_path,
-                                        lines=instance_lines)
+          #self.visualise(stats, title=enc_name)
+          
+          #save verbose stats #TODO: in tmp directory?
+          
+          return stats
 
-                    clingo_control = Control()
-                    solver = RaSchSolver(environment=env,
-                                        clingo_control=clingo_control,
-                                        logger=self._logger
-                                        )
-                    solver.solve(enc_name,instance_name)
-                    solver.save()
-
-                    #save verbose stats #TODO: in tmp directory
-                    #self.basic_save(clingo_control, name=f'{encoding}_{name}')
-
-                    stats[enc_name][name] = clingo_control.statistics['summary']['times']['choices']
-
-                    if len(solver.agent_actions.items()) == 0:
-                         self._logger.warning(
-                              "No actions generated, check the solver and ASP encoding.")
-                         continue
-
-               except FileNotFoundError as e:
-                    self._logger.error(f"{e}")
-               except RuntimeError as parse_error:
-                    if "parsing failed" in str(parse_error):
-                         self._logger.error(f"Parsing failed for encoding: {enc_name} with environment: {file}")
-                         return
-                    raise
 
      def bench_encs(self, args, environment_name: str) -> None:
           """
@@ -152,7 +128,7 @@ class Benchmark:
                name of the .pkl-file
           """
           enc_dir = get_config().asp_encodings_path
-          stat_path = 'data/statistics/'
+          stat_path = 'data/statistics/' #TODO
           stats = {}
 
           for enc in os.listdir(enc_dir): #iterate through encodings
@@ -161,11 +137,11 @@ class Benchmark:
                enc_name = os.path.splitext(enc)[0]
                stats[enc_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, stats=stats, limit=args.limit) #environment setup
 
-          self._logger.info(f"Statistics saved to: {stat_path}_{environment_name}_stats.json")
+          self._logger.info(f"Statistics saved to: {stat_path}{environment_name}_stats.json")
           with open(f'{stat_path}{environment_name}_stats.json', 'w') as f: 
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 
-          self.visualise(stats, environment_name=environment_name)
+          self.visualise(stats, title=environment_name)
 
      def bench_all(self, args):
           enc_dir = get_config().asp_encodings_path
@@ -176,25 +152,33 @@ class Benchmark:
                if not enc.endswith('.lp'):
                     continue
                enc_name = os.path.splitext(enc)[0]
-               stats[enc_name] = {}
 
-               self.bench_envs(stats=stats, enc_name=enc_name,limit=args.limit)
+               stats[enc_name] = self.bench_envs(stats=stats, enc_name=enc_name,limit=args.limit)
 
           self._logger.info(f"Statistics saved to: {stat_path}stats_total.json")
           with open(f'{stat_path}stats_total.json', 'w') as f: 
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
+          
+          #turn dict into series
+          s = pd.DataFrame(stats)
+
+          # Create a bar plot
+          s.plot(kind='bar')
+          plt.title("all")
+          plt.ylabel('Choices')
+          plt.xlabel('Environment')
+          plt.tight_layout()
+          # Display the plot
+          plt.show()
 
                
-     def visualise(self, stats: dict, environment_name: str):
+     def visualise(self, stats: dict, title: str):
           #turn dict into series
           s = pd.Series(stats)
           # Create a bar plot
           s.plot(kind='bar')
 
-          # Add labels and title
-          plt.xlabel('Encoding')
-          plt.ylabel('Number of choices')
-          plt.title(environment_name)
+          plt.title(title)
 
           # Display the plot
           plt.show()

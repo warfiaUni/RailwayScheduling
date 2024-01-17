@@ -1,5 +1,4 @@
 import argparse
-import os
 
 from clingo import Control
 from flatland.utils.rendertools import AgentRenderVariant, RenderTool
@@ -14,13 +13,13 @@ from rasch.rasch_solver import RaSchSolver
 
 logger = get_logger()
 
-
 def main():
     try:
         args = define_args()
         encoding_name = args.encoding
         environment_name = args.environment
         limit = args.limit
+        norender = args.norender
 
         if(args.benchmark == 'all'): #benchmark all encodings and all environments
             benchmark = Benchmark(logger=logger)
@@ -30,7 +29,7 @@ def main():
             benchmark.bench_encs(args, environment_name)
         elif(args.benchmark == 'env'): #compare enviornments on one encoding
             benchmark = Benchmark(logger=logger)
-            benchmark.bench_envs(args, encoding_name)
+            benchmark.bench_envs(args, enc_name=encoding_name, save=True)
         else:
             env = read_from_pickle_file(f'{environment_name}.pkl')
             env.reset()
@@ -53,7 +52,7 @@ def main():
 
             if(args.benchmark == ""): # -b has no argument, give benchmark for this encoding and env
                 benchmark = Benchmark(logger=logger)
-                benchmark.basic_save(clingo_control, name=encoding_name)
+                benchmark.basic_save(clingo_control.statistics, name=f"{encoding_name}_{environment_name}")
 
             if len(solver.agent_actions.items()) == 0:
                 logger.warning(
@@ -67,7 +66,7 @@ def main():
                 environment=env, renderer=renderer, logger=logger)
 
             simulator.simulate_actions(
-                agent_actions=solver.agent_actions, render=True)
+                agent_actions=solver.agent_actions, render=norender)
 
     except FileNotFoundError as e:
         logger.error(f"{e}")
@@ -83,4 +82,5 @@ def define_args():
     parser.add_argument('environment', default=get_config().default_environment, nargs='?')
     parser.add_argument('limit', default=20, nargs='?') 
     parser.add_argument('-b','--benchmark', type=str, nargs='?', const='', choices=['','all','env','enc'], help="Activates Benchmarking. This outputs statistics to a file.")
-    return parser.parse_args()
+    parser.add_argument('-nr','--norender', action='store_false', help='Flag: Dont visualise actions')
+    return parser.parse_args() 

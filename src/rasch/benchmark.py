@@ -12,7 +12,6 @@ from rasch.rasch_config import RaSchConfig, get_config
 from rasch.rasch_solver import RaSchSolver
 
 #TODO: visualise stats 
-#TODO: try all encodings for all environments 
 #TODO: don't log if solving fails
 
 class Benchmark:
@@ -25,8 +24,8 @@ class Benchmark:
      def environment_setup(self, 
                            env_name: str, 
                            enc_name: str, 
-                           stats: list, 
                            limit=20) -> dict:
+          """creates environment and instance, solves it and returns statistics"""
           try:
                env = read_from_pickle_file(f'{env_name}.pkl')
                env.reset()
@@ -46,16 +45,11 @@ class Benchmark:
                solver.solve(enc_name,instance_name)
                solver.save()
 
-               #save verbose stats #TODO: in tmp directory
-               #self.basic_save(clingo_control, name=f'{encoding}_{name}')
-               
-               #stats[env_name][enc_name] = clingo_control.statistics['solving']['solvers']['choices']
-
                if len(solver.agent_actions.items()) == 0:
                     self._logger.warning(
                          "No actions generated, check the solver and ASP encoding.")
 
-               return clingo_control.statistics['solving']['solvers']['choices']
+               return clingo_control.statistics
           
           except FileNotFoundError as e:
                self._logger.error(f"{e}")
@@ -65,34 +59,17 @@ class Benchmark:
                     return None
                raise
 
-     def basic_save(self, clingo_control, name = 'test') -> None:
-          """helper to save basic stats from clingo_control to a file"""
-          stat_path = 'data/statistics/' #TODO: into config
-          #output basic stats to file
-          stats_times = clingo_control.statistics['summary']['times']
-          stats_solver = clingo_control.statistics['solving']['solvers']
-          stats = {
-               'times': stats_times, 
-               'solver': stats_solver
-          }
+     def basic_save(self, stats:dict, stat_path = 'data/statistics/', name = 'test') -> None:
+          """save stats from dict to a json"""
+          #TODO: stat path into config
 
-          #print(json.dumps(self.clingo_control.statistics, indent=4,sort_keys=True,separators=(',', ': ')))
           self._logger.info(f"Statistics saved to: {stat_path}{name}_stats.json")
           with open(f'{stat_path}{name}_stats.json', 'w') as f: 
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 
-     def bench_envs(self, stats: list, enc_name = 'test', limit = 20) -> dict:
+     def bench_envs(self, args, enc_name: str, save: bool) -> dict:
           """
           benchmark one encoding on all environments found in flatland_environments_path from the config
-          
-          Parameters
-          ----------
-          stats : list
-               empty list
-          enc_name : str
-               name of the encoding (.lp-file)
-          limit : int
-               timestep limit, passed to encoding
           """
           env_dir = get_config().flatland_environments_path
           stat_path = 'data/statistics/' #TODO
@@ -102,30 +79,21 @@ class Benchmark:
                if not env.endswith('.pkl'):
                     continue
                env_name = os.path.splitext(env)[0]
-               stats[env_name] = self.environment_setup(env_name=env_name, enc_name=enc_name, stats=stats, limit=limit) #environment setup
+               tmp_stats = self.environment_setup(env_name=env_name, enc_name=enc_name, limit=args.limit) #environment setup
+               stats[env_name] = {
+                    'summary': tmp_stats['summary'], 
+                    'solving': tmp_stats['solving']
+               }
           
-          save_fn = f"{stat_path}{enc_name}_stats.json"
-          self._logger.info(f"Statistics saved to: {save_fn}")
-          with open(f'{save_fn}', 'w') as f: 
-               json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
+          if(save):
+               self.basic_save(stats=stats, stat_path=stat_path, name=enc_name)
 
-          #self.visualise(stats, title=enc_name)
-          
-          #save verbose stats #TODO: in tmp directory?
-          
           return stats
 
 
-     def bench_encs(self, args, environment_name: str) -> None:
+     def bench_encs(self, args, environment_name: str, save = True) -> dict:
           """
           benchmark one environment on all encodings found in asp_encodings_path from the config
-
-          Parameters
-          ----------
-          args : Namespace
-               arguments from argparse
-          environment_name : str
-               name of the .pkl-file
           """
           enc_dir = get_config().asp_encodings_path
           stat_path = 'data/statistics/' #TODO
@@ -135,15 +103,14 @@ class Benchmark:
                if not enc.endswith('.lp'):
                     continue
                enc_name = os.path.splitext(enc)[0]
-               stats[enc_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, stats=stats, limit=args.limit) #environment setup
+               stats[enc_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, limit=args.limit) #environment setup
 
-          self._logger.info(f"Statistics saved to: {stat_path}{environment_name}_stats.json")
-          with open(f'{stat_path}{environment_name}_stats.json', 'w') as f: 
-               json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
+          if(save):
+               self.basic_save(stats=stats, stat_path=stat_path, name=environment_name)
 
-          self.visualise(stats, title=environment_name)
+          return stats
 
-     def bench_all(self, args):
+     def bench_all(self, args, save = True) -> dict:
           enc_dir = get_config().asp_encodings_path
           stats = {}
           stat_path = 'data/statistics/'
@@ -153,34 +120,11 @@ class Benchmark:
                     continue
                enc_name = os.path.splitext(enc)[0]
 
-               stats[enc_name] = self.bench_envs(stats=stats, enc_name=enc_name,limit=args.limit)
+               stats[enc_name] = self.bench_envs(enc_name=enc_name, args=args, save=False)
 
-          self._logger.info(f"Statistics saved to: {stat_path}stats_total.json")
-          with open(f'{stat_path}stats_total.json', 'w') as f: 
-               json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
+          if(save):
+               self.basic_save(stats=stats, stat_path=stat_path, name="all") #save to json
           
-          #turn dict into series
-          s = pd.DataFrame(stats)
-
-          # Create a bar plot
-          s.plot(kind='bar')
-          plt.title("all")
-          plt.ylabel('Choices')
-          plt.xlabel('Environment')
-          plt.tight_layout()
-          # Display the plot
-          plt.show()
-
-               
-     def visualise(self, stats: dict, title: str):
-          #turn dict into series
-          s = pd.Series(stats)
-          # Create a bar plot
-          s.plot(kind='bar')
-
-          plt.title(title)
-
-          # Display the plot
-          plt.show()
+          return stats
 
 

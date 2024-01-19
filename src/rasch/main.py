@@ -3,6 +3,7 @@ import argparse
 from clingo import Control
 from flatland.utils.rendertools import AgentRenderVariant, RenderTool
 
+import rasch.benchmark_visualise as vis
 from rasch.benchmark import Benchmark
 from rasch.file import read_from_pickle_file, write_lines_to_file
 from rasch.instance_generation import generate_instance_lines
@@ -20,6 +21,10 @@ def main():
         environment_name = args.environment
         limit = args.limit
         norender = args.norender
+
+        if(args.visualise):
+            vis.visualise(args.visualise)
+            return
 
         if(args.benchmark == 'all'): #benchmark all encodings and all environments
             benchmark = Benchmark(logger=logger)
@@ -83,4 +88,5 @@ def define_args():
     parser.add_argument('limit', default=20, nargs='?') 
     parser.add_argument('-b','--benchmark', type=str, nargs='?', const='', choices=['','all','env','enc'], help="Activates Benchmarking. This outputs statistics to a file.")
     parser.add_argument('-nr','--norender', action='store_false', help='Flag: Dont visualise actions')
+    parser.add_argument('-v', '--visualise', type=str, nargs='?', const='data/statistics/all_stats.json')
     return parser.parse_args() 

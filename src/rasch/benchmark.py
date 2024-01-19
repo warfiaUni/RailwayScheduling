@@ -2,17 +2,15 @@ import json
 import os
 from logging import Logger
 
-import pandas as pd
 from clingo.control import Control
-from matplotlib import pyplot as plt
 
 from rasch.file import read_from_pickle_file, write_lines_to_file
 from rasch.instance_generation import generate_instance_lines
 from rasch.rasch_config import RaSchConfig, get_config
 from rasch.rasch_solver import RaSchSolver
 
-#TODO: visualise stats 
-#TODO: don't log if solving fails
+#TODO: verbose logging option, to remove excess info
+#TODO: async
 
 class Benchmark:
      def __init__(self, *,
@@ -86,7 +84,10 @@ class Benchmark:
                }
           
           if(save):
-               self.basic_save(stats=stats, stat_path=stat_path, name=enc_name)
+               _stats = {
+                    enc_name: stats
+               }
+               self.basic_save(stats=_stats, stat_path=stat_path, name=enc_name)
 
           return stats
 
@@ -103,7 +104,8 @@ class Benchmark:
                if not enc.endswith('.lp'):
                     continue
                enc_name = os.path.splitext(enc)[0]
-               stats[enc_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, limit=args.limit) #environment setup
+               stats[enc_name] = {}
+               stats[enc_name][environment_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, limit=args.limit) #environment setup
 
           if(save):
                self.basic_save(stats=stats, stat_path=stat_path, name=environment_name)

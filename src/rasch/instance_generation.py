@@ -14,7 +14,8 @@ def schedule_literal(agent) -> str:
             f",{agent.initial_position}"
             f",{agent.target}"
             f",{agent.direction}"
-            f",{agent.earliest_departure}"
+            #f",{agent.earliest_departure}"
+            f",0"
             f").")
 
 

@@ -41,7 +41,7 @@ class RaSchSolver:
              for symbol in symbols])
 
         if len(symbols) < self.number_of_symbols:
-            self._logger.info(
+            self._logger.debug(
                 f"Shorter model found {self.number_of_symbols} > {len(symbols)}")
             self.number_of_symbols = len(symbols)
             self.agent_actions = {}
@@ -64,14 +64,14 @@ class RaSchSolver:
         self.clingo_control.load(
             f"{self._config.asp_encodings_path}{encoding_name}.lp")
 
-        self._logger.info("Start grounding.")
+        self._logger.debug("Start grounding.")
         self.clingo_control.ground()
 
-        self._logger.info("Start solving.")
+        self._logger.debug("Start solving.")
         self.clingo_control.solve(
             on_model=lambda x: self._on_clingo_model(x))
 
-        self._logger.info(
+        self._logger.debug(
             f"Finished solving, best model has {self.number_of_symbols} symbols.")
 
     def save(self, file_name: str = "test_solve.json") -> None:

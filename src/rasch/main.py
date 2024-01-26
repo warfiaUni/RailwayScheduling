@@ -1,4 +1,5 @@
 import argparse
+import logging
 from os import path
 
 from clingo import Control
@@ -13,16 +14,24 @@ from rasch.rasch_config import get_config
 from rasch.rasch_simulator import RaSchSimulator
 from rasch.rasch_solver import RaSchSolver
 
-logger = get_logger()
+
 
 def main():
-    try:
-        args = define_args()
-        encoding_name = args.encoding
-        environment_name = args.environment
-        limit = args.limit
-        norender = args.norender
+    args = define_args()
+    encoding_name = args.encoding
+    environment_name = args.environment
+    limit = args.limit
+    norender = args.norender
 
+    match args.loglevel:
+        case 'debug':
+            logger = get_logger(logging.DEBUG)
+        case 'warning':
+            logger = get_logger(logging.WARNING)
+        case _:
+            logger = get_logger(logging.INFO)
+
+    try:
         if(args.visualise):
             vis.visualise(args.visualise)
             return
@@ -41,7 +50,7 @@ def main():
             env.reset()
 
             instance_name = f"{encoding_name}_{environment_name}_instance"
-            logger.info(f"Creating instance: {instance_name}.")
+            logger.debug(f"Creating instance: {instance_name}.")
             instance_lines = generate_instance_lines(env, limit)
         
             write_lines_to_file(file_name=f"{instance_name}.lp",
@@ -90,4 +99,5 @@ def define_args():
     parser.add_argument('-b','--benchmark', type=str, nargs='?', const='', choices=['','all','env','enc'], help="Activates Benchmarking. This outputs statistics to a file.")
     parser.add_argument('-nr','--norender', action='store_false', help='Flag: Dont visualise actions')
     parser.add_argument('-v', '--visualise', type=str, nargs='?', const=path.join(get_config().statistics_output_path,'all_stats.json'))
+    parser.add_argument('-ll', '--loglevel', type=str, nargs='?', choices=['debug','info','warning'], default='info', help='Sets the desired log level.')
     return parser.parse_args() 

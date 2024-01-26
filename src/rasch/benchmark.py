@@ -57,12 +57,13 @@ class Benchmark:
                     return None
                raise
 
-     def basic_save(self, stats:dict, stat_path = 'data/statistics/', name = 'test') -> None:
+     def basic_save(self, stats:dict, name = 'test') -> None:
           """save stats from dict to a json"""
-          #TODO: stat path into config
 
-          self._logger.info(f"Statistics saved to: {stat_path}{name}_stats.json")
-          with open(f'{stat_path}{name}_stats.json', 'w') as f: 
+          full_path = os.path.join(self._config.statistics_output_path, f'{name}_stats.json')
+
+          self._logger.info(f"Statistics saved to: {full_path}")
+          with open(full_path, 'w') as f: 
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 
      def bench_envs(self, args, enc_name: str, save: bool) -> dict:
@@ -70,7 +71,6 @@ class Benchmark:
           benchmark one encoding on all environments found in flatland_environments_path from the config
           """
           env_dir = get_config().flatland_environments_path
-          stat_path = 'data/statistics/' #TODO
           stats = {}
 
           for env in os.listdir(env_dir): #iterate through environments
@@ -87,7 +87,7 @@ class Benchmark:
                _stats = {
                     enc_name: stats
                }
-               self.basic_save(stats=_stats, stat_path=stat_path, name=enc_name)
+               self.basic_save(stats=_stats, name=enc_name)
 
           return stats
 
@@ -97,7 +97,6 @@ class Benchmark:
           benchmark one environment on all encodings found in asp_encodings_path from the config
           """
           enc_dir = get_config().asp_encodings_path
-          stat_path = 'data/statistics/' #TODO
           stats = {}
 
           for enc in os.listdir(enc_dir): #iterate through encodings
@@ -108,14 +107,13 @@ class Benchmark:
                stats[enc_name][environment_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, limit=args.limit) #environment setup
 
           if(save):
-               self.basic_save(stats=stats, stat_path=stat_path, name=environment_name)
+               self.basic_save(stats=stats, name=environment_name)
 
           return stats
 
      def bench_all(self, args, save = True) -> dict:
           enc_dir = get_config().asp_encodings_path
           stats = {}
-          stat_path = 'data/statistics/'
 
           for enc in os.listdir(enc_dir): #iterate through encodings
                if not enc.endswith('.lp'):
@@ -125,7 +123,7 @@ class Benchmark:
                stats[enc_name] = self.bench_envs(enc_name=enc_name, args=args, save=False)
 
           if(save):
-               self.basic_save(stats=stats, stat_path=stat_path, name="all") #save to json
+               self.basic_save(stats=stats, name="all") #save to json
           
           return stats
 

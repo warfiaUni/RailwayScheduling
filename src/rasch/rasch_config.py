@@ -11,6 +11,7 @@ class RaSchConfig(yaml.YAMLObject):
     asp_instances_path: str
     flatland_environments_path: str
     solver_output_path: str
+    statistics_output_path:str
 
     yaml_tag: str = '!config'
     yaml_loader = yaml.SafeLoader

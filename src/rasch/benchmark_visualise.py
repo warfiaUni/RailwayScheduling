@@ -1,11 +1,14 @@
 import json
+from os import path
 
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
+from rasch.rasch_config import get_config
 
-def visualise(file_path = 'data/statistics/all_stats.json'):
+
+def visualise(file_path = path.join(get_config().statistics_output_path, 'all_stats.json')):
     # Read the nested JSON file
     with open(file_path, 'r') as file:
         stats = json.load(file)

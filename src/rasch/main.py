@@ -1,4 +1,5 @@
 import argparse
+from os import path
 
 from clingo import Control
 from flatland.utils.rendertools import AgentRenderVariant, RenderTool
@@ -88,5 +89,5 @@ def define_args():
     parser.add_argument('limit', default=20, nargs='?') 
     parser.add_argument('-b','--benchmark', type=str, nargs='?', const='', choices=['','all','env','enc'], help="Activates Benchmarking. This outputs statistics to a file.")
     parser.add_argument('-nr','--norender', action='store_false', help='Flag: Dont visualise actions')
-    parser.add_argument('-v', '--visualise', type=str, nargs='?', const='data/statistics/all_stats.json')
+    parser.add_argument('-v', '--visualise', type=str, nargs='?', const=path.join(get_config().statistics_output_path,'all_stats.json'))
     return parser.parse_args() 

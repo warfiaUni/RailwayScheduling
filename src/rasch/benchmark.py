@@ -28,7 +28,7 @@ class Benchmark:
                env = read_from_pickle_file(f'{env_name}.pkl')
                env.reset()
                instance_name = f"{enc_name}_{env_name}_instance"
-               self._logger.info(f"Creating instance: {instance_name}.")
+               self._logger.debug(f"Creating instance: {instance_name}.")
                instance_lines = generate_instance_lines(env, limit)
           
                write_lines_to_file(file_name=f"{instance_name}.lp",
@@ -62,7 +62,7 @@ class Benchmark:
 
           full_path = os.path.join(self._config.statistics_output_path, f'{name}_stats.json')
 
-          self._logger.info(f"Statistics saved to: {full_path}")
+          self._logger.debug(f"Statistics saved to: {full_path}")
           with open(full_path, 'w') as f: 
                json.dump(stats, f, indent=4,sort_keys=True,separators=(',', ': '))
 

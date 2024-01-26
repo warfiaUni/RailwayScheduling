@@ -33,9 +33,9 @@ class LoggingFormatter(logging.Formatter):
 
 
 @lru_cache
-def get_logger():
+def get_logger(log_level:int):
     logger = logging.getLogger("railway")
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(log_level)
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(LoggingFormatter())
     logger.addHandler(stream_handler)

@@ -33,11 +33,11 @@ class RaSchSimulator:
         step = 0
         agents_step = {}
         for id, actions in agent_actions.items():
-            self._logger.info(f"Agent {id} action count {len(actions)}")
+            self._logger.debug(f"Agent {id} action count {len(actions)}")
 
         while not self.environment.dones["__all__"] and step < max_steps:
             actionsdict = {}
-            self._logger.info(f"Actions for step: {step}")
+            self._logger.debug(f"Actions for step: {step}")
             for idx, agent in enumerate(self.environment.agents):
                 if agent.position:
                     if not self.environment.dones[idx]:
@@ -50,10 +50,10 @@ class RaSchSimulator:
                     actionsdict[agent.handle] = RailEnvActions.MOVE_FORWARD
 
                 if idx in agents_step:
-                    self._logger.info(
+                    self._logger.debug(
                         f"Agent({idx}) is at {agent.position} and chose {Action(actionsdict[agent.handle])} at step {agents_step[idx]}/{len(agent_actions[idx])-1}.")
                 else:
-                    self._logger.info(
+                    self._logger.debug(
                         f"Agent({idx}) not spawned yet. {agent.state}")
 
             self.environment.step(actionsdict)

@@ -31,7 +31,7 @@ def generate_instance_lines(env: RailEnv, limit: int) -> list[str]:
     if (env.rail is None):
         return []
 
-    logger.info("Generating ASP instance.")
+    logger.debug("Generating ASP instance.")
 
     limit_literal = f"limit({limit})."
 
@@ -40,7 +40,7 @@ def generate_instance_lines(env: RailEnv, limit: int) -> list[str]:
                  *[schedule_literal(agent) for agent in env.agents]
                  ]
 
-    logger.info(f"{len(schedules)} schedule literals done.")
+    logger.debug(f"{len(schedules)} schedule literals done.")
 
     cells = [
         "",
@@ -73,7 +73,7 @@ def generate_instance_lines(env: RailEnv, limit: int) -> list[str]:
                     cells.append(cell_literal(
                         y, x, Direction(i), valid_directions))
 
-    logger.info(f"{len(cells)} cell literals done.")
+    logger.debug(f"{len(cells)} cell literals done.")
 
     diffs = [
         "",

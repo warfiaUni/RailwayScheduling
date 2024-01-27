@@ -17,6 +17,8 @@ from rasch.rasch_solver import RaSchSolver
 
 #TODO: verbose logging option, to remove excess info
 #TODO: async
+#TODO: add seaborn
+#TODO: add timeout as fl_result
 
 class Benchmark:
      def __init__(self, *,

@@ -31,16 +31,16 @@ def main():
 
     try:
         if(args.visualise):
-            Benchmark(logger).visualise(args.visualise)
+            Benchmark(logger=logger).visualise(args.visualise)
             return
 
         match args.benchmark:
             case 'all': #benchmark all encodings and all environments
-                Benchmark(logger).bench_all(args)
+                Benchmark(logger=logger).bench_all(args)
             case 'enc': #compare encodings on one environment from config
-                Benchmark(logger).bench_encs(args, environment_name)
+                Benchmark(logger=logger).bench_encs(args, environment_name)
             case 'env': #compare enviornments on one encoding
-                Benchmark(logger).bench_envs(args, enc_name=encoding_name, save=True)
+                Benchmark(logger=logger).bench_envs(args, enc_name=encoding_name, save=True)
             case _: #else
                 logger = get_logger(logging.INFO)
                 env = read_from_pickle_file(f'{environment_name}.pkl')

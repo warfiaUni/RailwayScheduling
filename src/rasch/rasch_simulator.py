@@ -25,49 +25,58 @@ class RaSchSimulator:
                          agent_actions: dict,
                          max_steps: int = 30,
                          step_delay: float = 0.5,
-                         render: bool = False) -> None:
+                         render: bool = False) -> bool:
         # Set Flatland horizon,
         # this should be similar to the ASP horizon
         self.environment._max_episode_steps = max_steps
 
         step = 0
         agents_step = {}
-        for id, actions in agent_actions.items():
-            self._logger.debug(f"Agent {id} action count {len(actions)}")
 
-        while not self.environment.dones["__all__"] and step < max_steps:
-            actionsdict = {}
-            self._logger.debug(f"Actions for step: {step}")
-            for idx, agent in enumerate(self.environment.agents):
-                if agent.position:
-                    if not self.environment.dones[idx]:
-                        if idx in agents_step:
-                            agents_step[idx] += 1
-                        else:
-                            agents_step[idx] = 0
-                        actionsdict[agent.handle] = agent_actions[idx][agents_step[idx]]
-                else:
-                    actionsdict[agent.handle] = RailEnvActions.MOVE_FORWARD
+        try:
+            for id, actions in agent_actions.items():
+                self._logger.debug(f"Agent {id} action count {len(actions)}")
 
-                if idx in agents_step:
-                    self._logger.debug(
-                        f"Agent({idx}) is at {agent.position} and chose {Action(actionsdict[agent.handle])} at step {agents_step[idx]}/{len(agent_actions[idx])-1}.")
-                else:
-                    self._logger.debug(
-                        f"Agent({idx}) not spawned yet. {agent.state}")
+            while not self.environment.dones["__all__"] and step < max_steps:
+                actionsdict = {}
+                self._logger.debug(f"Actions for step: {step}")
+                for idx, agent in enumerate(self.environment.agents):
+                    if agent.position:
+                        if not self.environment.dones[idx]:
+                            if idx in agents_step:
+                                agents_step[idx] += 1
+                            else:
+                                agents_step[idx] = 0
+                            actionsdict[agent.handle] = agent_actions[idx][agents_step[idx]]
+                    else:
+                        actionsdict[agent.handle] = RailEnvActions.MOVE_FORWARD
 
-            self.environment.step(actionsdict)
+                    if idx in agents_step:
+                        self._logger.debug(
+                            f"Agent({idx}) is at {agent.position} and chose {Action(actionsdict[agent.handle])} at step {agents_step[idx]}/{len(agent_actions[idx])-1}.")
+                    else:
+                        self._logger.debug(
+                            f"Agent({idx}) not spawned yet. {agent.state}")
 
-            self.agents_at_step[step] = copy.deepcopy(
-                self.environment.agents)
+                self.environment.step(actionsdict)
 
+                self.agents_at_step[step] = copy.deepcopy(
+                    self.environment.agents)
+
+                if render:
+                    self.renderer.render_env(
+                        show=True, show_rowcols=True, show_observations=False)
+
+                    time.sleep(step_delay)
+                step += 1
+            # Show last frame
             if render:
                 self.renderer.render_env(
                     show=True, show_rowcols=True, show_observations=False)
+            
+            return self.environment.dones["__all__"]
+                
+        except KeyError as keyerror: #TODO
+            self._logger.error(f"Missing actions at index {keyerror!s}")
+            return False
 
-                time.sleep(step_delay)
-            step += 1
-        # Show last frame
-        if render:
-            self.renderer.render_env(
-                show=True, show_rowcols=True, show_observations=False)

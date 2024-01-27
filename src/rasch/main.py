@@ -5,7 +5,6 @@ from os import path
 from clingo import Control
 from flatland.utils.rendertools import AgentRenderVariant, RenderTool
 
-import rasch.benchmark_visualise as vis
 from rasch.benchmark import Benchmark
 from rasch.file import read_from_pickle_file, write_lines_to_file
 from rasch.instance_generation import generate_instance_lines
@@ -13,7 +12,6 @@ from rasch.logging import get_logger
 from rasch.rasch_config import get_config
 from rasch.rasch_simulator import RaSchSimulator
 from rasch.rasch_solver import RaSchSolver
-
 
 
 def main():
@@ -33,55 +31,54 @@ def main():
 
     try:
         if(args.visualise):
-            vis.visualise(args.visualise)
+            Benchmark(logger).visualise(args.visualise)
             return
 
-        if(args.benchmark == 'all'): #benchmark all encodings and all environments
-            benchmark = Benchmark(logger=logger)
-            benchmark.bench_all(args)
-        elif(args.benchmark == 'enc'): #compare encodings on one environment from config
-            benchmark = Benchmark(logger=logger)
-            benchmark.bench_encs(args, environment_name)
-        elif(args.benchmark == 'env'): #compare enviornments on one encoding
-            benchmark = Benchmark(logger=logger)
-            benchmark.bench_envs(args, enc_name=encoding_name, save=True)
-        else:
-            env = read_from_pickle_file(f'{environment_name}.pkl')
-            env.reset()
+        match args.benchmark:
+            case 'all': #benchmark all encodings and all environments
+                Benchmark(logger).bench_all(args)
+            case 'enc': #compare encodings on one environment from config
+                Benchmark(logger).bench_encs(args, environment_name)
+            case 'env': #compare enviornments on one encoding
+                Benchmark(logger).bench_envs(args, enc_name=encoding_name, save=True)
+            case _: #else
+                logger = get_logger(logging.INFO)
+                env = read_from_pickle_file(f'{environment_name}.pkl')
+                env.reset()
 
-            instance_name = f"{encoding_name}_{environment_name}_instance"
-            logger.debug(f"Creating instance: {instance_name}.")
-            instance_lines = generate_instance_lines(env, limit)
-        
-            write_lines_to_file(file_name=f"{instance_name}.lp",
-                                path=get_config().asp_instances_path,
-                                lines=instance_lines)
+                instance_name = f"{encoding_name}_{environment_name}_instance"
+                logger.debug(f"Creating instance: {instance_name}.")
+                instance_lines = generate_instance_lines(env, limit)
+            
+                write_lines_to_file(file_name=f"{instance_name}.lp",
+                                    path=get_config().asp_instances_path,
+                                    lines=instance_lines)
 
-            clingo_control = Control()
-            solver = RaSchSolver(environment=env,
-                                clingo_control=clingo_control,
-                                logger=logger
-                                )
-            solver.solve(encoding_name,instance_name)
-            solver.save()
+                clingo_control = Control()
+                solver = RaSchSolver(environment=env,
+                                    clingo_control=clingo_control,
+                                    logger=logger
+                                    )
+                solver.solve(encoding_name,instance_name)
+                solver.save()
 
-            if(args.benchmark == ""): # -b has no argument, give benchmark for this encoding and env
-                benchmark = Benchmark(logger=logger)
-                benchmark.basic_save(clingo_control.statistics, name=f"{encoding_name}_{environment_name}")
+                if(args.benchmark == ""): # -b has no argument, give benchmark for this encoding and env
+                    benchmark = Benchmark(logger=logger)
+                    benchmark.basic_save(clingo_control.statistics, name=f"{encoding_name}_{environment_name}")
 
-            if len(solver.agent_actions.items()) == 0:
-                logger.warning(
-                    "No actions generated, check the solver and ASP encoding.")
-                return
+                if len(solver.agent_actions.items()) == 0:
+                    logger.warning(
+                        "No actions generated, check the solver and ASP encoding.")
+                    return
 
-            renderer = RenderTool(
-                env, agent_render_variant=AgentRenderVariant.AGENT_SHOWS_OPTIONS)
+                renderer = RenderTool(
+                    env, agent_render_variant=AgentRenderVariant.AGENT_SHOWS_OPTIONS)
 
-            simulator = RaSchSimulator(
-                environment=env, renderer=renderer, logger=logger)
+                simulator = RaSchSimulator(
+                    environment=env, renderer=renderer, logger=logger)
 
-            simulator.simulate_actions(
-                agent_actions=solver.agent_actions, render=norender)
+                simulator.simulate_actions(
+                    agent_actions=solver.agent_actions, render=norender)
 
     except FileNotFoundError as e:
         logger.error(f"{e}")

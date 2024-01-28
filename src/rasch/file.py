@@ -13,7 +13,7 @@ def create_path_if_not_exist(*, path: str) -> None:
         os.makedirs(path)
 
 
-def write_lines_to_file(*, path: str, file_name: str, lines: list[str]) -> None:
+def write_lines_to_file(*, path: str, file_name: str, lines: list[str]) -> str:
     """ Write given list of lines to specified file in path.
 
         The path is created if it does not exist.
@@ -23,6 +23,8 @@ def write_lines_to_file(*, path: str, file_name: str, lines: list[str]) -> None:
 
     with open(file_path, 'w') as f:
         f.writelines(f'{line}\n' for line in lines)
+
+    return file_path
 
 
 def read_from_pickle_file(file_name: str, path: str = get_config().flatland_environments_path) -> RailEnv:

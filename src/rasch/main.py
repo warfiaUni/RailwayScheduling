@@ -35,10 +35,8 @@ def main():
             Benchmark(logger=logger).visualise(args.visualise)
             return
         
-        #TODO: earliest-departure von flatland
         #TODO: doppel debug info
-        #TODO: max_steps für simulate_actions
-        #TODO: crashing into each other, has something to do with different departure times???
+        #TODO: why rasch -b env does not generate actions for some but individually it will work???
         if(args.random): #TODO
             rail_generator = sparse_rail_generator(max_num_cities=2)
 
@@ -51,19 +49,19 @@ def main():
                 line_generator=sparse_line_generator(),
                 obs_builder_object=GlobalObsForRailEnv()
             )
+                
+            env.reset()
 
             #TODO: remove if earliest departure more than 0 is supported
             for agent in env.agents:
                 agent.earliest_departure = 0
-                
-            env.reset()
+
             logger.debug(env._max_episode_steps)
             solve_and_render(env=env, 
                              environment_name="random", 
                              encoding_name=args.encoding, 
                              limit=env._max_episode_steps, 
                              logger=logger)
-
             return
 
         match args.benchmark:
@@ -80,10 +78,10 @@ def main():
                 clingo_control = solve_and_render(env=env,
                                                   environment_name=args.environment, 
                                                   encoding_name=args.encoding, 
-                                                  limit=env._max_episode_steps,
+                                                  limit=args.limit,
                                                   logger=logger)
 
-                if((args.benchmark == "") & (clingo_control.statistics is not None)): # -b has no argument, give benchmark for this encoding and env
+                if((args.benchmark == "") & (clingo_control != -1)): # -b has no argument, give benchmark for this encoding and env
                     benchmark = Benchmark(logger=logger)
                     benchmark.basic_save(clingo_control.statistics, name=f"{args.encoding}_{args.environment}")
 

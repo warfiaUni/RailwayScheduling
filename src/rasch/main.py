@@ -1,5 +1,6 @@
 import argparse
 import logging
+from logging import Logger
 from os import path
 
 from clingo import Control
@@ -34,6 +35,10 @@ def main():
             Benchmark(logger=logger).visualise(args.visualise)
             return
         
+        #TODO: earliest-departure von flatland
+        #TODO: doppel debug info
+        #TODO: max_steps für simulate_actions
+        #TODO: crashing into each other, has something to do with different departure times???
         if(args.random): #TODO
             rail_generator = sparse_rail_generator(max_num_cities=2)
 
@@ -46,10 +51,14 @@ def main():
                 line_generator=sparse_line_generator(),
                 obs_builder_object=GlobalObsForRailEnv()
             )
-            
-            env.reset()
 
-            solve_and_render(env, 
+            #TODO: remove if earliest departure more than 0 is supported
+            for agent in env.agents:
+                agent.earliest_departure = 0
+                
+            env.reset()
+            logger.debug(env._max_episode_steps)
+            solve_and_render(env=env, 
                              environment_name="random", 
                              encoding_name=args.encoding, 
                              limit=env._max_episode_steps, 
@@ -68,13 +77,13 @@ def main():
                 env = read_from_pickle_file(f'{args.environment}.pkl')
                 env.reset()
                 
-                clingo_control = solve_and_render(env,
+                clingo_control = solve_and_render(env=env,
                                                   environment_name=args.environment, 
                                                   encoding_name=args.encoding, 
-                                                  limit=args.limit,  
+                                                  limit=env._max_episode_steps,
                                                   logger=logger)
 
-                if(args.benchmark == "" & clingo_control.statistics is not None): # -b has no argument, give benchmark for this encoding and env
+                if((args.benchmark == "") & (clingo_control.statistics is not None)): # -b has no argument, give benchmark for this encoding and env
                     benchmark = Benchmark(logger=logger)
                     benchmark.basic_save(clingo_control.statistics, name=f"{args.encoding}_{args.environment}")
 
@@ -86,12 +95,12 @@ def main():
             return
         raise
 
-def solve_and_render(env: RailEnv, 
+def solve_and_render(logger: Logger,
+                     env: RailEnv, 
                      environment_name: str, 
                      encoding_name: str, 
                      limit: int = 20, 
-                     norender: bool = True, 
-                     logger = get_logger(logging.INFO)) -> Control:
+                     norender: bool = True) -> Control:
 
     instance_name = f"{encoding_name}_{environment_name}_instance"
     logger.debug(f"Creating instance: {instance_name}.")
@@ -121,7 +130,7 @@ def solve_and_render(env: RailEnv,
         environment=env, renderer=renderer, logger=logger)
 
     simulator.simulate_actions(
-        agent_actions=solver.agent_actions, render=norender)
+        agent_actions=solver.agent_actions, render=norender, max_steps=env._max_episode_steps)
     
     return clingo_control
 

@@ -15,8 +15,8 @@ from rasch.rasch_config import RaSchConfig, get_config
 from rasch.rasch_simulator import RaSchSimulator
 from rasch.rasch_solver import RaSchSolver
 
-#TODO: verbose logging option, to remove excess info
-#TODO: async
+#TODO: (bonus) verbose logging option, to remove excess info
+#TODO: (bonus) async
 #TODO: add seaborn
 #TODO: add timeout as fl_result
 

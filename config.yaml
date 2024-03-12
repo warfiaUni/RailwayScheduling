@@ -1,5 +1,5 @@
 rasch_config: !config
-  default_encoding: 'primitive'
+  default_encoding: 'vertex'
   default_environment: '2x3x2-switch_dead_end_passing'
   asp_encodings_path: 'data/encodings/'
   asp_instances_path: 'data/instances/'

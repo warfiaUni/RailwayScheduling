@@ -9,8 +9,8 @@ from rasch.rasch_config import RaSchConfig, get_config
 from rasch.rasch_simulator import RaSchSimulator
 from rasch.rasch_solver import RaSchSolver
 
+#TODO: finish, and switch out all environment_setups
 #TODO: whack name, what is a good name?
-
 class RaSchSetup:
      def __init__(self, *,
                  logger: Logger,

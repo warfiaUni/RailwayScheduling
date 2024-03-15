@@ -36,7 +36,7 @@ def main():
             return
         
         #TODO: doppel debug info
-        #TODO: why rasch -b env does not generate actions for some but individually it will work???
+        #TODO: Horizon in config.json, then test if maps can all be solved with rasch -b env
         if(args.random): #TODO
             rail_generator = sparse_rail_generator(max_num_cities=2)
 

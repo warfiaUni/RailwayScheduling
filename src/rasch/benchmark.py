@@ -30,13 +30,19 @@ class Benchmark:
      def environment_setup(self, 
                            env_name: str, 
                            enc_name: str, 
-                           limit=20) -> dict:
-          """creates environment and instance, solves it and returns statistics"""
+                           limit = None) -> dict:
+          """creates environment and instance, solves it and returns statistics
+          if limit is not defined env._max_episode_steps is used"""
           try:
                env = read_from_pickle_file(f'{env_name}.pkl')
                env.reset()
                instance_name = f"{enc_name}_{env_name}_instance"
                self._logger.debug(f"Creating instance: {instance_name}.")
+
+               if(limit is None):
+                    limit = env._max_episode_steps
+                    self._logger.debug(f"Limit: {limit}")
+
                instance_lines = generate_instance_lines(env, limit)
           
                write_lines_to_file(file_name=f"{instance_name}.lp",

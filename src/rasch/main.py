@@ -1,22 +1,17 @@
 import argparse
 import logging
-from logging import Logger
 from os import path
 
-from clingo import Control
 from flatland.envs.line_generators import sparse_line_generator
 from flatland.envs.observations import GlobalObsForRailEnv
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
-from flatland.utils.rendertools import AgentRenderVariant, RenderTool
 
 from rasch.benchmark import Benchmark
-from rasch.file import read_from_pickle_file, write_lines_to_file
-from rasch.instance_generation import generate_instance_lines
+from rasch.file import read_from_pickle_file
 from rasch.logging import get_logger
 from rasch.rasch_config import get_config
-from rasch.rasch_simulator import RaSchSimulator
-from rasch.rasch_solver import RaSchSolver
+from rasch.rasch_setup import solve_and_simulate
 
 
 def main():
@@ -57,11 +52,12 @@ def main():
                 agent.earliest_departure = 0
 
             logger.debug(env._max_episode_steps)
-            solve_and_render(env=env, 
-                             environment_name="random", 
-                             encoding_name=args.encoding, 
+            solve_and_simulate(env=env, 
+                             env_name="random", 
+                             enc_name=args.encoding, 
                              limit=env._max_episode_steps, 
-                             logger=logger)
+                             logger=logger,
+                             norender=args.norender)
             return
 
         match args.benchmark:
@@ -75,11 +71,12 @@ def main():
                 env = read_from_pickle_file(f'{args.environment}.pkl')
                 env.reset()
                 
-                clingo_control = solve_and_render(env=env,
-                                                  environment_name=args.environment, 
-                                                  encoding_name=args.encoding, 
-                                                  limit=args.limit,
-                                                  logger=logger)
+                clingo_control = solve_and_simulate(env=env,
+                                                  env_name=args.environment, 
+                                                  enc_name=args.encoding, 
+                                                  limit=int(args.limit),
+                                                  logger=logger,
+                                                  norender=True)
 
                 if((args.benchmark == "") & (clingo_control != -1)): # -b has no argument, give benchmark for this encoding and env
                     benchmark = Benchmark(logger=logger)
@@ -92,45 +89,6 @@ def main():
             logger.error(f"Parsing failed for encoding: {args.encoding}")
             return
         raise
-
-def solve_and_render(logger: Logger,
-                     env: RailEnv, 
-                     environment_name: str, 
-                     encoding_name: str, 
-                     limit: int = 20, 
-                     norender: bool = True) -> Control:
-
-    instance_name = f"{encoding_name}_{environment_name}_instance"
-    logger.debug(f"Creating instance: {instance_name}.")
-    instance_lines = generate_instance_lines(env, limit)
-
-    write_lines_to_file(file_name=f"{instance_name}.lp",
-                        path=get_config().asp_instances_path,
-                        lines=instance_lines)
-
-    clingo_control = Control()
-    solver = RaSchSolver(environment=env,
-                        clingo_control=clingo_control,
-                        logger=logger
-                        )
-    solver.solve(encoding_name,instance_name)
-    solver.save()
-
-    if len(solver.agent_actions.items()) == 0:
-        logger.warning(
-            "No actions generated, check the solver and ASP encoding.")
-        return -1
-
-    renderer = RenderTool(
-        env, agent_render_variant=AgentRenderVariant.AGENT_SHOWS_OPTIONS)
-
-    simulator = RaSchSimulator(
-        environment=env, renderer=renderer, logger=logger)
-
-    simulator.simulate_actions(
-        agent_actions=solver.agent_actions, render=norender, max_steps=env._max_episode_steps)
-    
-    return clingo_control
 
 def define_args():
     parser = argparse.ArgumentParser(description='Railway Scheduling with Flatland and ASP')

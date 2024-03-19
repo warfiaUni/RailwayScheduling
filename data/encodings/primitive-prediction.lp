@@ -7,7 +7,7 @@ decision_point(P) :- cell(P,O,D), count(P,O,C), C>1.
 % predict starting direction
 1{pred_direction(ID,D,T):cell(P,O,D)}1 :- schedule(ID,P,_,O,T).
 % predict starting transition
-pred_trans(ID,(Y,X),(Y+DY,X+DX),D,T+1) :- schedule(ID,(Y,X),_,O,T), 
+pred_trans(ID,(Y,X),(Y+DY,X+DX),D,T) :- schedule(ID,(Y,X),_,O,T), 
                                         pred_direction(ID,D,T), 
                                         diff(D,DY,DX).
 %---------------------------------------------------------------
@@ -49,7 +49,7 @@ trans(ID,P,P',D,T) :- pred_trans(ID,P,P',D,T), not pred_coll(ID,_,T) .
 % otherwise let agent decide between prediction and halting
 1{trans(ID,P,P',D,T);trans(ID,P,P,O,T)}1 :- pred_trans(ID,P,P',D,T), 
                                             pred_coll(ID,_,T),
-                                            schedule(ID,P,_,O,T-1).
+                                            schedule(ID,P,_,O,T).
 
 % reached target?
 done(ID,T) :- schedule(ID,_,P,_,_), trans(ID,_,P,_,T).

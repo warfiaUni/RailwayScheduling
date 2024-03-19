@@ -15,3 +15,12 @@ rasch_horizon:
   5x5x2-crossing: 100
   20x20x1-snake: 400
   simple_switch_map: 20
+  3x10x1-four_cycle: 20
+  3x10x2-four_cycle: 20
+  3x10x3-four_cycle: 20
+  3x10x4-four_cycle: 20
+  3x4x1-single_cycle: 20
+  3x4x2-single_cycle: 20
+  3x4x3-single_cycle: 20
+  3x4x4-single_cycle: 20
+  3x5x2-simple_order: 20

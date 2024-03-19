@@ -30,8 +30,7 @@ def main():
             Benchmark(logger=logger).visualise(args.visualise)
             return
         
-        #TODO: Horizon in config.json, then test if maps can all be solved with rasch -b env
-        if(args.random): #TODO
+        if(args.random):
             rail_generator = sparse_rail_generator(max_num_cities=2)
 
             # Random Environment Generator

@@ -6,3 +6,12 @@ rasch_config: !config
   flatland_environments_path: 'data/environments/'
   solver_output_path: 'data/solutions/'
   statistics_output_path: 'data/statistics/'
+
+rasch_horizon:
+  2x3x1-simple_switch: 20
+  2x3x2-switch_dead_end_passing: 20
+  4x3x1-no_exit: 20
+  5x5x1-snake: 25
+  5x5x2-crossing: 100
+  20x20x1-snake: 400
+  simple_switch_map: 20

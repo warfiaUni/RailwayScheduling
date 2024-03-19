@@ -10,7 +10,6 @@ from rasch.rasch_config import get_config
 from rasch.rasch_simulator import RaSchSimulator
 from rasch.rasch_solver import RaSchSolver
 
-#TODO: finish, and switch out all environment_setups
 #TODO: whack name, what is a good name?
 
 def solve_and_simulate(logger: Logger, 
@@ -25,8 +24,8 @@ def solve_and_simulate(logger: Logger,
           logger.debug(f"Creating instance: {instance_name}.")
           
           if(limit is None):
-               limit = env._max_episode_steps
-               logger.debug(f"Limit: {limit}")
+               limit = env._max_episode_steps #take flatland Horizon if none defined
+               logger.debug(f"Flatland Horizon: {limit}")
           
           instance_lines = generate_instance_lines(env, limit)
      

@@ -8,7 +8,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 from rasch.file import read_from_pickle_file
-from rasch.rasch_config import RaSchConfig, get_config
+from rasch.rasch_config import RaSchConfig, get_config, get_horizons
 from rasch.rasch_setup import solve_and_simulate
 
 #TODO: (bonus) verbose logging option, to remove excess info
@@ -47,7 +47,7 @@ class Benchmark:
                env = read_from_pickle_file(f'{env_name}.pkl') ###
                env.reset() ###
                
-               cc = solve_and_simulate(logger=self._logger,env=env,env_name=env_name, enc_name=enc_name, limit=args.limit) #environment setup
+               cc = solve_and_simulate(logger=self._logger,env=env,env_name=env_name, enc_name=enc_name, limit=get_horizons(env_name)) #environment setup
                if not hasattr(cc, 'statistics'):
                     continue
                if(cc.statistics['fl_result']=="success"):
@@ -84,7 +84,7 @@ class Benchmark:
                env.reset() ###
 
                stats[enc_name] = {}
-               cc = solve_and_simulate(logger=self._logger, env=env, env_name=env_name, enc_name=enc_name, limit=args.limit) #environment setup
+               cc = solve_and_simulate(logger=self._logger, env=env, env_name=env_name, enc_name=enc_name, limit=get_horizons(env_name)) #environment setup
 
                if not hasattr(cc, 'statistics'):
                     continue

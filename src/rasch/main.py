@@ -2,24 +2,20 @@ import argparse
 import logging
 from os import path
 
-from clingo import Control
-from flatland.utils.rendertools import AgentRenderVariant, RenderTool
+from flatland.envs.line_generators import sparse_line_generator
+from flatland.envs.observations import GlobalObsForRailEnv
+from flatland.envs.rail_env import RailEnv
+from flatland.envs.rail_generators import sparse_rail_generator
 
 from rasch.benchmark import Benchmark
-from rasch.file import read_from_pickle_file, write_lines_to_file
-from rasch.instance_generation import generate_instance_lines
+from rasch.file import read_from_pickle_file
 from rasch.logging import get_logger
 from rasch.rasch_config import get_config
-from rasch.rasch_simulator import RaSchSimulator
-from rasch.rasch_solver import RaSchSolver
+from rasch.rasch_setup import solve_and_simulate
 
 
 def main():
     args = define_args()
-    encoding_name = args.encoding
-    environment_name = args.environment
-    limit = args.limit
-    norender = args.norender
 
     match args.loglevel:
         case 'debug':
@@ -33,52 +29,56 @@ def main():
         if(args.visualise):
             Benchmark(logger=logger).visualise(args.visualise)
             return
+        
+        if(args.random):
+            rail_generator = sparse_rail_generator(max_num_cities=2)
+
+            # Random Environment Generator
+            env = RailEnv(
+                width=24,
+                height=24,
+                number_of_agents=2,
+                rail_generator=rail_generator,
+                line_generator=sparse_line_generator(),
+                obs_builder_object=GlobalObsForRailEnv()
+            )
+                
+            env.reset()
+
+            #TODO: remove if earliest departure more than 0 is supported
+            for agent in env.agents:
+                agent.earliest_departure = 0
+
+            logger.debug(env._max_episode_steps)
+            solve_and_simulate(env=env, 
+                             env_name="random", 
+                             enc_name=args.encoding, 
+                             limit=env._max_episode_steps, 
+                             logger=logger,
+                             norender=args.norender)
+            return
 
         match args.benchmark:
             case 'all': #benchmark all encodings and all environments
                 Benchmark(logger=logger).bench_all(args)
             case 'enc': #compare encodings on one environment from config
-                Benchmark(logger=logger).bench_encs(args, environment_name)
+                Benchmark(logger=logger).bench_encs(args, args.environment)
             case 'env': #compare enviornments on one encoding
-                Benchmark(logger=logger).bench_envs(args, enc_name=encoding_name, save=True)
+                Benchmark(logger=logger).bench_envs(args, enc_name=args.encoding, save=True)
             case _: #else
-                logger = get_logger(logging.INFO)
-                env = read_from_pickle_file(f'{environment_name}.pkl')
+                env = read_from_pickle_file(f'{args.environment}.pkl')
                 env.reset()
+                
+                clingo_control = solve_and_simulate(env=env,
+                                                  env_name=args.environment, 
+                                                  enc_name=args.encoding, 
+                                                  limit=int(args.limit),
+                                                  logger=logger,
+                                                  norender=True)
 
-                instance_name = f"{encoding_name}_{environment_name}_instance"
-                logger.debug(f"Creating instance: {instance_name}.")
-                instance_lines = generate_instance_lines(env, limit)
-            
-                write_lines_to_file(file_name=f"{instance_name}.lp",
-                                    path=get_config().asp_instances_path,
-                                    lines=instance_lines)
-
-                clingo_control = Control()
-                solver = RaSchSolver(environment=env,
-                                    clingo_control=clingo_control,
-                                    logger=logger
-                                    )
-                solver.solve(encoding_name,instance_name)
-                solver.save()
-
-                if(args.benchmark == ""): # -b has no argument, give benchmark for this encoding and env
+                if((args.benchmark == "") & (clingo_control != -1)): # -b has no argument, give benchmark for this encoding and env
                     benchmark = Benchmark(logger=logger)
-                    benchmark.basic_save(clingo_control.statistics, name=f"{encoding_name}_{environment_name}")
-
-                if len(solver.agent_actions.items()) == 0:
-                    logger.warning(
-                        "No actions generated, check the solver and ASP encoding.")
-                    return
-
-                renderer = RenderTool(
-                    env, agent_render_variant=AgentRenderVariant.AGENT_SHOWS_OPTIONS)
-
-                simulator = RaSchSimulator(
-                    environment=env, renderer=renderer, logger=logger)
-
-                simulator.simulate_actions(
-                    agent_actions=solver.agent_actions, render=norender)
+                    benchmark.basic_save(clingo_control.statistics, name=f"{args.encoding}_{args.environment}")
 
     except FileNotFoundError as e:
         logger.error(f"{e}")
@@ -97,4 +97,5 @@ def define_args():
     parser.add_argument('-nr','--norender', action='store_false', help='Flag: Dont visualise actions')
     parser.add_argument('-v', '--visualise', type=str, nargs='?', const=path.join(get_config().statistics_output_path,'all_stats.json'))
     parser.add_argument('-ll', '--loglevel', type=str, nargs='?', choices=['debug','info','warning'], default='info', help='Sets the desired log level.')
+    parser.add_argument('-r','--random', action='store_true')
     return parser.parse_args() 

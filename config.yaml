@@ -1,8 +1,26 @@
 rasch_config: !config
-  default_encoding: 'primitive'
+  default_encoding: 'vertex'
   default_environment: '2x3x2-switch_dead_end_passing'
   asp_encodings_path: 'data/encodings/'
   asp_instances_path: 'data/instances/'
   flatland_environments_path: 'data/environments/'
   solver_output_path: 'data/solutions/'
   statistics_output_path: 'data/statistics/'
+
+rasch_horizon:
+  2x3x1-simple_switch: 20
+  2x3x2-switch_dead_end_passing: 20
+  4x3x1-no_exit: 20
+  5x5x1-snake: 25
+  5x5x2-crossing: 100
+  20x20x1-snake: 400
+  simple_switch_map: 20
+  3x10x1-four_cycle: 20
+  3x10x2-four_cycle: 20
+  3x10x3-four_cycle: 20
+  3x10x4-four_cycle: 20
+  3x4x1-single_cycle: 20
+  3x4x2-single_cycle: 20
+  3x4x3-single_cycle: 20
+  3x4x4-single_cycle: 20
+  3x5x2-simple_order: 20

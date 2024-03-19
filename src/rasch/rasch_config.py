@@ -29,3 +29,16 @@ def get_config() -> RaSchConfig:
             raise (TypeError("config.yaml is not correctly formatted"))
 
         return data["rasch_config"]
+
+@lru_cache
+def get_horizons(key):
+    with open('config.yaml', 'r') as config_file:
+        data: dict[str, Any] = yaml.safe_load(config_file)
+
+        if "rasch_horizon" not in data:
+            raise (EOFError("Reached end of file before rasch_horizon was declared."))
+
+        if key not in data["rasch_horizon"]:
+            raise (EOFError(f"rasch_horizon in config.yaml does not have key: {key}"))
+        
+        return data["rasch_horizon"][key]

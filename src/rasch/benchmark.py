@@ -5,18 +5,14 @@ from os import path
 
 import pandas as pd
 import seaborn as sns
-from clingo.control import Control
-from flatland.utils.rendertools import AgentRenderVariant, RenderTool
 from matplotlib import pyplot as plt
 
-from rasch.file import read_from_pickle_file, write_lines_to_file
-from rasch.instance_generation import generate_instance_lines
-from rasch.rasch_config import RaSchConfig, get_config
-from rasch.rasch_simulator import RaSchSimulator
-from rasch.rasch_solver import RaSchSolver
+from rasch.file import read_from_pickle_file
+from rasch.rasch_config import RaSchConfig, get_config, get_horizons
+from rasch.rasch_setup import solve_and_simulate
 
-#TODO: verbose logging option, to remove excess info
-#TODO: async
+#TODO: (bonus) verbose logging option, to remove excess info
+#TODO: (bonus) async
 #TODO: add seaborn
 #TODO: add timeout as fl_result
 
@@ -26,63 +22,6 @@ class Benchmark:
                  config: RaSchConfig = get_config()) -> None:
         self._logger = logger
         self._config = config
-
-     def environment_setup(self, 
-                           env_name: str, 
-                           enc_name: str, 
-                           limit=20) -> dict:
-          """creates environment and instance, solves it and returns statistics"""
-          try:
-               env = read_from_pickle_file(f'{env_name}.pkl')
-               env.reset()
-               instance_name = f"{enc_name}_{env_name}_instance"
-               self._logger.debug(f"Creating instance: {instance_name}.")
-               instance_lines = generate_instance_lines(env, limit)
-          
-               write_lines_to_file(file_name=f"{instance_name}.lp",
-                                   path=get_config().asp_instances_path,
-                                   lines=instance_lines)
-
-               clingo_control = Control()
-               solver = RaSchSolver(environment=env,
-                                   clingo_control=clingo_control,
-                                   logger=self._logger
-                                   )
-               solver.solve(enc_name,instance_name)
-               solver.save()
-
-               if len(solver.agent_actions.items()) == 0:
-                    self._logger.warning(
-                         f"No actions generated, check the solver and ASP encoding. ({enc_name}, {env_name})")
-                    clingo_control.statistics.clear()
-                    clingo_control.statistics['fl_result'] = "no actions" 
-                    return clingo_control.statistics
-
-               renderer = RenderTool(
-                    env, agent_render_variant=AgentRenderVariant.AGENT_SHOWS_OPTIONS)
-
-               simulator = RaSchSimulator(
-                    environment=env, renderer=renderer, logger=self._logger)
-
-               if(simulator.simulate_actions(
-                    agent_actions=solver.agent_actions, render=False)): # if simulator succeeds
-                    clingo_control.statistics['fl_result'] = "success"
-               else:
-                    self._logger.warning(
-                         f"Invalid actions, check the actions generator in the encoding. ({enc_name}, {env_name})")
-                    clingo_control.statistics.clear()
-                    clingo_control.statistics['fl_result'] = "invalid actions" # actions generated but simulator failed
-               
-
-               return clingo_control.statistics
-          
-          except FileNotFoundError as e:
-               self._logger.error(f"{e}")
-               return None
-          except RuntimeError as parse_error:
-               if "parsing failed" in str(parse_error):
-                    self._logger.error(f"Parsing failed for encoding: {enc_name} with environment: {env_name}")
-               raise
 
      def basic_save(self, stats:dict, name = 'test') -> None:
           """save stats from dict to a json"""
@@ -104,17 +43,21 @@ class Benchmark:
                if not env.endswith('.pkl'):
                     continue
                env_name = os.path.splitext(env)[0]
-               tmp_stats = self.environment_setup(env_name=env_name, enc_name=enc_name, limit=args.limit) #environment setup
-               if(tmp_stats is None):
+
+               env = read_from_pickle_file(f'{env_name}.pkl') ###
+               env.reset() ###
+               
+               cc = solve_and_simulate(logger=self._logger,env=env,env_name=env_name, enc_name=enc_name, limit=get_horizons(env_name)) #environment setup
+               if not hasattr(cc, 'statistics'):
                     continue
-               if(tmp_stats['fl_result']=="success"):
+               if(cc.statistics['fl_result']=="success"):
                     stats[env_name] = {
-                         'fl_result': tmp_stats['fl_result'],
-                         'summary': tmp_stats['summary'], 
-                         'solving': tmp_stats['solving']
+                         'fl_result': cc.statistics['fl_result'],
+                         'summary': cc.statistics['summary'], 
+                         'solving': cc.statistics['solving']
                     }
                else:
-                    stats[env_name] = tmp_stats
+                    stats[env_name] = cc.statistics
           
           if(save):
                _stats = {
@@ -125,7 +68,7 @@ class Benchmark:
           return stats
 
 
-     def bench_encs(self, args, environment_name: str, save = True) -> dict:
+     def bench_encs(self, args, env_name: str, save = True) -> dict:
           """
           benchmark one environment on all encodings found in asp_encodings_path from the config
           """
@@ -136,11 +79,26 @@ class Benchmark:
                if not enc.endswith('.lp'):
                     continue
                enc_name = os.path.splitext(enc)[0]
+
+               env = read_from_pickle_file(f'{env_name}.pkl') ###
+               env.reset() ###
+
                stats[enc_name] = {}
-               stats[enc_name][environment_name] = self.environment_setup(env_name=environment_name, enc_name=enc_name, limit=args.limit) #environment setup
+               cc = solve_and_simulate(logger=self._logger, env=env, env_name=env_name, enc_name=enc_name, limit=get_horizons(env_name)) #environment setup
+
+               if not hasattr(cc, 'statistics'):
+                    continue
+               if(cc.statistics['fl_result']=="success"):
+                    stats[enc_name][env_name] = {
+                         'fl_result': cc.statistics['fl_result'],
+                         'summary': cc.statistics['summary'], 
+                         'solving': cc.statistics['solving']
+                    }
+               else:
+                    stats[enc_name][env_name] = cc.statistics
 
           if(save):
-               self.basic_save(stats=stats, name=environment_name)
+               self.basic_save(stats=stats, name=env_name)
 
           return stats
 

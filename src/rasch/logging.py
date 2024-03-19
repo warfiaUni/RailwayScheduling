@@ -40,3 +40,15 @@ def get_logger(log_level:int):
     stream_handler.setFormatter(LoggingFormatter())
     logger.addHandler(stream_handler)
     return logger
+
+def get_logger_by_level(loglevel:str):
+
+    match loglevel:
+        case 'debug':
+            logger = get_logger(logging.DEBUG)
+        case 'warning':
+            logger = get_logger(logging.WARNING)
+        case _:
+            logger = get_logger(logging.INFO)
+
+    return logger

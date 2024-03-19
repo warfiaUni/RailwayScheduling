@@ -70,7 +70,7 @@ class RaSchSolver:
         self._logger.debug("Start solving.")
         self.clingo_control.solve(
             on_model=lambda x: self._on_clingo_model(x))
-
+        
         self._logger.debug(
             f"Finished solving, best model has {self.number_of_symbols} symbols.")
 

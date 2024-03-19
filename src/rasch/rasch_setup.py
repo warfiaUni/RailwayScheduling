@@ -1,11 +1,14 @@
+import multiprocessing as mp
+import time
 from logging import Logger
 
 from clingo import Control
 from flatland.envs.rail_env import RailEnv
 from flatland.utils.rendertools import AgentRenderVariant, RenderTool
 
-from rasch.file import write_lines_to_file
+from rasch.file import read_from_pickle_file, write_lines_to_file
 from rasch.instance_generation import generate_instance_lines
+from rasch.logging import get_logger_by_level
 from rasch.rasch_config import get_config
 from rasch.rasch_simulator import RaSchSimulator
 from rasch.rasch_solver import RaSchSolver
@@ -34,19 +37,24 @@ def solve_and_simulate(logger: Logger,
                               lines=instance_lines)
 
           clingo_control = Control()
+
           solver = RaSchSolver(environment=env,
                               clingo_control=clingo_control,
                               logger=logger
                               )
-          solver.solve(enc_name,instance_name)
-          solver.save()
+          
+          solver.solve(encoding_name=enc_name,
+                       instance_name=instance_name)
+          
+          solver.save(file_name=f"{enc_name}_{env_name}_solve.json")
 
           if len(solver.agent_actions.items()) == 0:
                logger.warning(
                     f"No actions generated, check the solver and ASP encoding. ({enc_name}, {env_name})")
                clingo_control.statistics.clear()
                clingo_control.statistics['fl_result'] = "no actions" 
-               return clingo_control.statistics
+
+               return clingo_control
 
           renderer = RenderTool(
                env, agent_render_variant=AgentRenderVariant.AGENT_SHOWS_OPTIONS)
@@ -72,3 +80,20 @@ def solve_and_simulate(logger: Logger,
           if "parsing failed" in str(parse_error):
                logger.error(f"Parsing failed for encoding: {enc_name} with environment: {env_name}")
           raise
+
+def solve_with_timeout(env_name: str, 
+                         enc_name: str, 
+                         result_queue: mp.Queue,
+                         loglevel: str,
+                         limit=None,
+                         norender: bool = False):
+     
+     logger = get_logger_by_level(loglevel=loglevel)
+     env = read_from_pickle_file(f'{env_name}.pkl')
+     env.reset()
+
+     cc = solve_and_simulate(logger=logger, env=env, env_name=env_name, enc_name=enc_name, limit=limit, norender=norender)
+
+     result_queue.put(cc.statistics)
+
+     return result_queue

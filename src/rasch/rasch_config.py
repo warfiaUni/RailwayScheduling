@@ -39,6 +39,7 @@ def get_horizons(key):
             raise (EOFError("Reached end of file before rasch_horizon was declared."))
 
         if key not in data["rasch_horizon"]:
+            return -1 #TODO
             raise (EOFError(f"rasch_horizon in config.yaml does not have key: {key}"))
         
         return data["rasch_horizon"][key]

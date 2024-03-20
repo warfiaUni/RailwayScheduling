@@ -26,10 +26,11 @@ class RaSchSimulator:
                          max_steps: int = 30,
                          step_delay: float = 0.5,
                          render: bool = False) -> bool:
+        
+        max_steps += 2 #account for spawning in Flatland
         # Set Flatland horizon,
         # this should be similar to the ASP horizon
         self.environment._max_episode_steps = max_steps
-
         step = 0
         agents_step = {}
 

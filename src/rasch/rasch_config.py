@@ -1,4 +1,5 @@
 from functools import lru_cache
+from logging import Logger
 from typing import Any
 
 import yaml
@@ -31,7 +32,7 @@ def get_config() -> RaSchConfig:
         return data["rasch_config"]
 
 @lru_cache
-def get_horizons(key):
+def get_horizons(key: str, logger: Logger):
     with open('config.yaml', 'r') as config_file:
         data: dict[str, Any] = yaml.safe_load(config_file)
 
@@ -39,8 +40,8 @@ def get_horizons(key):
             raise (EOFError("Reached end of file before rasch_horizon was declared."))
 
         if key not in data["rasch_horizon"]:
-            print("Found no horizon for environment.")
-            return -1 #TODO
+            logger.warn("Found no horizon for environment, skipping.")
+            return -1 #TODO currently skips environment without horizon
             raise (EOFError(f"rasch_horizon in config.yaml does not have key: {key}"))
         
         return data["rasch_horizon"][key]

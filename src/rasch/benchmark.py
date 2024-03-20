@@ -7,14 +7,11 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from rasch.file import read_from_pickle_file
 from rasch.rasch_config import RaSchConfig, get_config, get_horizons
-from rasch.rasch_setup import solve_and_simulate, solve_with_timeout
+from rasch.rasch_setup import solve_with_timeout
 
-#TODO: (bonus) verbose logging option, to remove excess info
 #TODO: (bonus) async
 #TODO: add seaborn
-#TODO: add timeout as fl_result
 
 class Benchmark:
      def __init__(self, *,
@@ -37,24 +34,28 @@ class Benchmark:
           benchmark one encoding on all environments found in flatland_environments_path from the config
           """
           env_dir = get_config().flatland_environments_path
+          args.encoding = enc_name
           stats = {}
 
           for env in os.listdir(env_dir): #iterate through environments
                if not env.endswith('.pkl'):
                     continue
-               args.env_name = os.path.splitext(env)[0]
-               
-               #cc = solve_and_simulate(logger=self._logger,env=env,env_name=args.env_name, enc_name=enc_name, limit=get_horizons(args.env_name)) #environment setup
+               args.environment = os.path.splitext(env)[0]
+
+               args.limit = get_horizons(key=args.environment, logger=self._logger)
+               if(args.limit==-1): #skip environment if no horizon is defined
+                    continue
+
                cc = solve_with_timeout(args=args, logger=self._logger)
 
                if(cc['fl_result']=="success"):
-                    stats[args.env_name] = {
+                    stats[args.environment] = {
                          'fl_result': cc['fl_result'],
                          'summary': cc['summary'], 
                          'solving': cc['solving']
                     }
                else:
-                    stats[args.env_name] = cc
+                    stats[args.environment] = cc
           
           if(save):
                _stats = {
@@ -75,23 +76,20 @@ class Benchmark:
           for enc in os.listdir(enc_dir): #iterate through encodings
                if not enc.endswith('.lp'):
                     continue
-               enc_name = os.path.splitext(enc)[0]
+               args.encoding = os.path.splitext(enc)[0]
 
-               #env = read_from_pickle_file(f'{env_name}.pkl') ###
-               #env.reset() ###
-
-               stats[enc_name] = {}
+               stats[args.encoding] = {}
+     
                cc = solve_with_timeout(args=args, logger=self._logger)
-               #cc = solve_and_simulate(logger=self._logger, env=env, env_name=env_name, enc_name=enc_name, limit=get_horizons(env_name)) #environment setup
 
                if(cc['fl_result']=="success"):
-                    stats[enc_name][env_name] = {
+                    stats[args.encoding][env_name] = {
                          'fl_result': cc['fl_result'],
                          'summary': cc['summary'], 
                          'solving': cc['solving']
                     }
                else:
-                    stats[enc_name][env_name] = cc
+                    stats[args.encoding][env_name] = cc
 
           if(save):
                self.basic_save(stats=stats, name=env_name)
@@ -156,8 +154,8 @@ class Benchmark:
           axes[0].set(title='Choices and Conflicts', xlabel= 'Environment', ylabel='')    #labels
           axes[0].set_xticks(ticks=axes[0].get_xticks(), labels=axes[0].get_xticklabels(), rotation=45, ha='right') #rotate
           axes[0].legend(title='Encoding')
-          for container in axes[0].containers:
-               axes[0].bar_label(container, size=6)
+          #for container in axes[0].containers:
+          #     axes[0].bar_label(container, size=6)
 
           #Barplot 2
           sns.barplot(x='env', y='total', hue='enc', data=df, palette='muted', ax=axes[1], legend=False)
@@ -165,8 +163,8 @@ class Benchmark:
           axes[1].set(title='Total and Solving Time', xlabel='Environment', ylabel='Time [s]')
           axes[1].set_xticks(ticks=axes[1].get_xticks(), labels=axes[1].get_xticklabels(), rotation=45, ha='right') #rotate
           axes[1].legend(title='Encoding')
-          for container in axes[1].containers:
-               axes[1].bar_label(container, fmt='%.2f', size=6)
+          #for container in axes[1].containers:
+          #     axes[1].bar_label(container, fmt='%.2f', size=6)
 
           sns.set()
           plt.tight_layout()

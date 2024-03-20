@@ -27,6 +27,11 @@ def solve_and_simulate(env_name: str,
           if(env is None):
                env = read_from_pickle_file(f'{env_name}.pkl')
                env.reset()
+          
+          #TODO: remove if earliest departure more than 0 is supported
+          for agent in env.agents:
+               agent.earliest_departure = 0
+
           instance_name = f"{enc_name}_{env_name}_instance"
           logger.debug(f"Creating instance: {instance_name}.")
           
@@ -98,6 +103,7 @@ def solve_and_simulate(env_name: str,
 
 def solve_with_timeout(args, logger):
      result_queue = mp.Queue()
+     logger.info(f"Solving {args.environment} with {args.encoding}.")
      process = mp.Process(target=solve_and_simulate, 
                          args=(
                               args.environment, 
@@ -111,10 +117,12 @@ def solve_with_timeout(args, logger):
 
      #if process is still running and no result was put into queue, terminate it
      if(process.is_alive() & result_queue.empty()):
-          logger.error("Solving timed out.")
+          logger.warn("Solving timed out.")
           process.terminate()
           process.join()
-          return -1 #TODO 
+          result_stats = {}
+          result_stats["fl_result"] = "timeout"
+          return result_stats
      else: #process is successful
           if(process.is_alive()):
                logger.warn("Simulator is still running.")

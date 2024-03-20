@@ -1,5 +1,4 @@
 import multiprocessing as mp
-import time
 from logging import Logger
 
 from clingo import Control
@@ -15,14 +14,19 @@ from rasch.rasch_solver import RaSchSolver
 
 #TODO: whack name, what is a good name?
 
-def solve_and_simulate(logger: Logger, 
-                         env: RailEnv,
-                         env_name: str, 
+def solve_and_simulate(env_name: str, 
                          enc_name: str, 
+                         loglevel: str,
                          limit=None,
-                         norender: bool = False) -> Control:
+                         norender: bool = False,
+                         result_queue = None,
+                         env: RailEnv = None):
      """creates environment and instance, solves it and returns statistics"""
      try:
+          logger = get_logger_by_level(loglevel=loglevel)
+          if(env is None):
+               env = read_from_pickle_file(f'{env_name}.pkl')
+               env.reset()
           instance_name = f"{enc_name}_{env_name}_instance"
           logger.debug(f"Creating instance: {instance_name}.")
           
@@ -48,14 +52,22 @@ def solve_and_simulate(logger: Logger,
           
           solver.save(file_name=f"{enc_name}_{env_name}_solve.json")
 
+          if(result_queue is not None):
+               result_queue.put(True)
+
           if len(solver.agent_actions.items()) == 0:
                logger.warning(
                     f"No actions generated, check the solver and ASP encoding. ({enc_name}, {env_name})")
                clingo_control.statistics.clear()
                clingo_control.statistics['fl_result'] = "no actions" 
 
-               return clingo_control
-
+               if(result_queue is not None):
+                    result_queue.put(clingo_control.statistics)
+               else:
+                    return clingo_control.statistics
+               
+               return None
+          
           renderer = RenderTool(
                env, agent_render_variant=AgentRenderVariant.AGENT_SHOWS_OPTIONS)
 
@@ -71,7 +83,10 @@ def solve_and_simulate(logger: Logger,
                clingo_control.statistics.clear()
                clingo_control.statistics['fl_result'] = "invalid actions" # actions generated but simulator failed
           
-          return clingo_control
+          if(result_queue is not None):
+               result_queue.put(clingo_control.statistics)
+          else:
+               return clingo_control.statistics
      
      except FileNotFoundError as e:
           logger.error(f"{e}")
@@ -81,19 +96,28 @@ def solve_and_simulate(logger: Logger,
                logger.error(f"Parsing failed for encoding: {enc_name} with environment: {env_name}")
           raise
 
-def solve_with_timeout(env_name: str, 
-                         enc_name: str, 
-                         result_queue: mp.Queue,
-                         loglevel: str,
-                         limit=None,
-                         norender: bool = False):
-     
-     logger = get_logger_by_level(loglevel=loglevel)
-     env = read_from_pickle_file(f'{env_name}.pkl')
-     env.reset()
+def solve_with_timeout(args, logger):
+     result_queue = mp.Queue()
+     process = mp.Process(target=solve_and_simulate, 
+                         args=(
+                              args.environment, 
+                              args.encoding, 
+                              args.loglevel,
+                              int(args.limit), 
+                              args.norender,
+                              result_queue))
+     process.start()
+     process.join(timeout=60)
 
-     cc = solve_and_simulate(logger=logger, env=env, env_name=env_name, enc_name=enc_name, limit=limit, norender=norender)
-
-     result_queue.put(cc.statistics)
-
-     return result_queue
+     #if process is still running and no result was put into queue, terminate it
+     if(process.is_alive() & result_queue.empty()):
+          logger.error("Solving timed out.")
+          process.terminate()
+          process.join()
+          return -1 #TODO 
+     else: #process is successful
+          if(process.is_alive()):
+               logger.warn("Simulator is still running.")
+          while not result_queue.empty():
+               result_stats = result_queue.get() #get last added item
+          return result_stats

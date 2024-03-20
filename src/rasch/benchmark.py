@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 
 from rasch.file import read_from_pickle_file
 from rasch.rasch_config import RaSchConfig, get_config, get_horizons
-from rasch.rasch_setup import solve_and_simulate
+from rasch.rasch_setup import solve_and_simulate, solve_with_timeout
 
 #TODO: (bonus) verbose logging option, to remove excess info
 #TODO: (bonus) async
@@ -42,22 +42,19 @@ class Benchmark:
           for env in os.listdir(env_dir): #iterate through environments
                if not env.endswith('.pkl'):
                     continue
-               env_name = os.path.splitext(env)[0]
-
-               env = read_from_pickle_file(f'{env_name}.pkl') ###
-               env.reset() ###
+               args.env_name = os.path.splitext(env)[0]
                
-               cc = solve_and_simulate(logger=self._logger,env=env,env_name=env_name, enc_name=enc_name, limit=get_horizons(env_name)) #environment setup
-               if not hasattr(cc, 'statistics'):
-                    continue
-               if(cc.statistics['fl_result']=="success"):
-                    stats[env_name] = {
-                         'fl_result': cc.statistics['fl_result'],
-                         'summary': cc.statistics['summary'], 
-                         'solving': cc.statistics['solving']
+               #cc = solve_and_simulate(logger=self._logger,env=env,env_name=args.env_name, enc_name=enc_name, limit=get_horizons(args.env_name)) #environment setup
+               cc = solve_with_timeout(args=args, logger=self._logger)
+
+               if(cc['fl_result']=="success"):
+                    stats[args.env_name] = {
+                         'fl_result': cc['fl_result'],
+                         'summary': cc['summary'], 
+                         'solving': cc['solving']
                     }
                else:
-                    stats[env_name] = cc.statistics
+                    stats[args.env_name] = cc
           
           if(save):
                _stats = {
@@ -80,22 +77,21 @@ class Benchmark:
                     continue
                enc_name = os.path.splitext(enc)[0]
 
-               env = read_from_pickle_file(f'{env_name}.pkl') ###
-               env.reset() ###
+               #env = read_from_pickle_file(f'{env_name}.pkl') ###
+               #env.reset() ###
 
                stats[enc_name] = {}
-               cc = solve_and_simulate(logger=self._logger, env=env, env_name=env_name, enc_name=enc_name, limit=get_horizons(env_name)) #environment setup
+               cc = solve_with_timeout(args=args, logger=self._logger)
+               #cc = solve_and_simulate(logger=self._logger, env=env, env_name=env_name, enc_name=enc_name, limit=get_horizons(env_name)) #environment setup
 
-               if not hasattr(cc, 'statistics'):
-                    continue
-               if(cc.statistics['fl_result']=="success"):
+               if(cc['fl_result']=="success"):
                     stats[enc_name][env_name] = {
-                         'fl_result': cc.statistics['fl_result'],
-                         'summary': cc.statistics['summary'], 
-                         'solving': cc.statistics['solving']
+                         'fl_result': cc['fl_result'],
+                         'summary': cc['summary'], 
+                         'solving': cc['solving']
                     }
                else:
-                    stats[enc_name][env_name] = cc.statistics
+                    stats[enc_name][env_name] = cc
 
           if(save):
                self.basic_save(stats=stats, name=env_name)

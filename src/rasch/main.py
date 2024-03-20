@@ -1,6 +1,4 @@
 import argparse
-import logging
-import multiprocessing as mp
 from os import path
 
 from flatland.envs.line_generators import sparse_line_generator
@@ -9,15 +7,14 @@ from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
 
 from rasch.benchmark import Benchmark
-from rasch.file import read_from_pickle_file
-from rasch.logging import log_level
+from rasch.logging import get_logger_by_level
 from rasch.rasch_config import get_config
 from rasch.rasch_setup import solve_and_simulate, solve_with_timeout
 
 
 def main():
     args = define_args()
-    logger = log_level(args.loglevel) #get logger for specific level
+    logger = get_logger_by_level(args.loglevel) #get logger for specific level
 
     try:
         if(args.visualise):
@@ -44,12 +41,13 @@ def main():
                 agent.earliest_departure = 0
 
             logger.debug(env._max_episode_steps)
+            #TODO: think about a way to change this to solve_with_timeout
             solve_and_simulate(env=env, 
                              env_name="random", 
                              enc_name=args.encoding, 
                              limit=env._max_episode_steps, 
-                             logger=logger,
-                             norender=args.norender)
+                             norender=args.norender,
+                             loglevel=args.loglevel)
             return
 
         match args.benchmark:
@@ -60,37 +58,12 @@ def main():
             case 'env': #compare enviornments on one encoding
                 Benchmark(logger=logger).bench_envs(args, enc_name=args.encoding, save=True)
             case _: #else
-                #env = read_from_pickle_file(f'{args.environment}.pkl')
-                #env.reset()
+                
+                result_stats = solve_with_timeout(args=args, logger=logger)
 
-                result_queue = mp.Queue()
-                process = mp.Process(target=solve_with_timeout, 
-                                     args=(
-                                         args.environment, 
-                                         args.encoding, 
-                                         result_queue, 
-                                         args.loglevel,
-                                         int(args.limit), 
-                                         True))
-                process.start()
-                process.join(timeout=60)
-
-                if(process.is_alive()):
-                    process.terminate()
-                    process.join()
-                    print('took too long')
-                    
-                # Check if there is a result in the queue
-                if not result_queue.empty():
-                    clingo_control = result_queue.get()
-                    print("Got result!")
-                else:
-                    clingo_control = -1
-                    print("No result returned within the timeout")
-
-                if((args.benchmark == "") & (clingo_control == -1)): # -b has no argument, give benchmark for this encoding and env
+                if((args.benchmark == "") & (result_stats == -1)): # -b has no argument, give benchmark for this encoding and env
                     benchmark = Benchmark(logger=logger)
-                    benchmark.basic_save(clingo_control.statistics, name=f"{args.encoding}_{args.environment}")
+                    benchmark.basic_save(result_stats, name=f"{args.encoding}_{args.environment}")
 
     except FileNotFoundError as e:
         logger.error(f"{e}")

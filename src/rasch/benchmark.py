@@ -11,7 +11,6 @@ from rasch.rasch_config import RaSchConfig, get_config, get_horizons
 from rasch.rasch_setup import solve_with_timeout
 
 #TODO: (bonus) async
-#TODO: add seaborn
 
 class Benchmark:
      def __init__(self, *,
@@ -143,19 +142,21 @@ class Benchmark:
                          ]
                     lst.append(tmp_lst)
 
-          df = pd.DataFrame(lst, columns=["enc","env","choices","conflicts","total","solve", "fl_result"])
-          
-          # Create a grouped bar plot
-          fig, axes = plt.subplots(ncols=2, figsize=(12, 6))
+          df = pd.DataFrame(lst, columns=["enc","env","choices","conflicts","total","solve", "fl_result"])#.fillna(-1)
 
+          # Create a grouped bar plot
+          fig, axes = plt.subplots(ncols=2, figsize=(10, 5))
+          
           #Barplot 1
           sns.barplot(x='env', y='choices', hue='enc', data=df, palette='muted', ax=axes[0], legend=False)
           sns.barplot(x='env', y='conflicts', hue='enc', data=df, palette='bright', ax=axes[0])
           axes[0].set(title='Choices and Conflicts', xlabel= 'Environment', ylabel='')    #labels
           axes[0].set_xticks(ticks=axes[0].get_xticks(), labels=axes[0].get_xticklabels(), rotation=45, ha='right') #rotate
-          axes[0].legend(title='Encoding')
+          axes[0].legend(title='Encoding')         
+          
+          #uncomment to put values on bars
           #for container in axes[0].containers:
-          #     axes[0].bar_label(container, size=6)
+          #     axes[0].bar_label(container, fmt='%.2f', size=6)
 
           #Barplot 2
           sns.barplot(x='env', y='total', hue='enc', data=df, palette='muted', ax=axes[1], legend=False)
@@ -163,11 +164,14 @@ class Benchmark:
           axes[1].set(title='Total and Solving Time', xlabel='Environment', ylabel='Time [s]')
           axes[1].set_xticks(ticks=axes[1].get_xticks(), labels=axes[1].get_xticklabels(), rotation=45, ha='right') #rotate
           axes[1].legend(title='Encoding')
-          #for container in axes[1].containers:
-          #     axes[1].bar_label(container, fmt='%.2f', size=6)
 
-          sns.set()
+          #uncomment to put values on bars
+          #for container in axes[1].containers:
+               #axes[1].bar_label(container, fmt='%.2f', size=6)
+
+          sns.set_theme(font_scale=1)
           plt.tight_layout()
           plt.show()
+          fig.savefig('test.png',dpi=300)
 
 

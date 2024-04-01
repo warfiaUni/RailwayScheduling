@@ -1,5 +1,4 @@
 import multiprocessing as mp
-from logging import Logger
 
 from clingo import Control
 from flatland.envs.rail_env import RailEnv
